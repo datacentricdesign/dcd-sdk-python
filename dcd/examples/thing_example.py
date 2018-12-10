@@ -7,11 +7,11 @@
 from random import random
 import time
 
-from ..entities.test import Thing
+from ..entities.thing import Thing
 from ..entities.property_type import PropertyType
 
 # The thing ID and the path of file containing the private key
-THING_ID = "test-0700"
+THING_ID = "test-thing-a6f7"
 THING_PRIVATE_KEY_PATH = "/Users/jbourgeois/Desktop/private-key"
 
 # Instantiate a thing with its credential
