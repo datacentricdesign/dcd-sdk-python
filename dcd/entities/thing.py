@@ -5,6 +5,9 @@ import time
 import requests
 import json
 
+verifyCert=False
+requests.packages.urllib3.disable_warnings()
+
 client = None
 mqtt_connected = False
 
@@ -59,13 +62,12 @@ def generate_token(private_key_path):
     # private_key = jwk.JWK.from_pem(priv_pem)
     # return jwt.generate_jwt(payload, private_key, 'RS256',
     #                         datetime.timedelta(minutes=5))
-    return "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1NDQzNjc4NjksImV4cCI6MTg1OTk0NzQ2OSwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo0NDc4L2FwaSJ9.B_sehC-6grT7W2AaAml2h3twbtzBTIUIcgxlZUahaXPdlblKfzNu7mSHEtMe0p6m1NTFXuj4bdT7ImrCWmDA0zZJPyOSZT8Bjgdkr1jd4bw63ci4v86S_Yk2DSquyrXoSLeqFJcaQhig17NQ8RPA1RDJhnjIf6_Ra1kzxVsDhbKuZ9gIso9JZFSrvBFJOTxKiFUq9zAgdof2VL62s9Gu7ywfRkJt6AnM1eKKqnXzRyOkj-0QaHDAF2r92aaW-RFcAx7mJd4yKiycK_W5AbNBwsC2thZ6KliM9CJvaVSRUMGP_WnsOnXbojOB64WPMLUzc8GkJzASwPf96DNOFRQpMlvOyZHD1Ym59TDSz7EA7nydeSHhZhmZoELuhnlpaL1-YvxM34nY1tm_tXTWRtotLLXQF4OaCZ9-auCzqPabAOhQeXuYkyXpOJr_WOeYYWzxaelz2tSkaSgPwaRYxJyZE8gq0Ylf3gANz5BhJQeRnGEsPufjQwicbIbh7kba1GveWWRtPlBBWfVxT-9irxHt3v1RN-YhSu1PWfFOqbb_n9qsbllQMyhRiiOBATSDa7dqvxDN84emWMt7d5AE7cT8doDX47fhaZalkM9gt5PwdSxAQVtY4SgTPzpKK2fi5GPw0NatHgcX0AJXxrD3wMApMYA7vu9A8EpQ8YqtV71cBaY"
-
+    return ""
 
 options = {
-    'mqtt_host': 'localhost',
-    'mqtt_port': 1883,
-    'http_uri': 'http://localhost:4478/api'
+    'mqtt_host': 'dwd.tudelft.nl',
+    'mqtt_port': 8883,
+    'http_uri': 'https://dwd.tudelft.nl/api'
 }
 
 
@@ -80,6 +82,7 @@ class Thing:
                  properties=(),
                  json_thing=None,
                  private_key_path=None,
+                 token=None,
                  on_connect_callback=None):
 
         self.properties = []
@@ -106,7 +109,10 @@ class Thing:
 
         if self.thing_id is not None:
             self.http_uri = options['http_uri']
-            self.token = generate_token(private_key_path)
+            if token is not None:
+                self.token = token
+            else:
+                self.token = generate_token(private_key_path)
 
             self.thread_mqtt = Thread(target = init_mqtt, args = (self.thing_id, self.token))
             self.thread_mqtt.start()
@@ -137,7 +143,7 @@ class Thing:
     def read(self):
         uri = self.http_uri + "/things/" + self.thing_id
         headers = {'Authorization': 'bearer ' + self.token};
-        json = requests.get(uri, headers=headers).json()
+        json = requests.get(uri, headers=headers, verify=verifyCert).json()
         if json["thing"] is not None:
             self.name = json["thing"]["name"]
             self.description = json["thing"]["description"]
@@ -161,7 +167,7 @@ class Thing:
                                property_type=property_type)
         headers = {'Authorization': 'bearer ' + self.token}
         uri = self.http_uri + "/things/" + self.thing_id + "/properties"
-        response = requests.post(uri, headers=headers,
+        response = requests.post(uri, headers=headers, verify=verifyCert,
                                  json=my_property.to_json())
         created_property = Property(json_property=response.json()['property'])
         created_property.belongs_to(self)

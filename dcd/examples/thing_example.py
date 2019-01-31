@@ -11,11 +11,11 @@ from ..entities.thing import Thing
 from ..entities.property_type import PropertyType
 
 # The thing ID and the path of file containing the private key
-THING_ID = "test-thing-a6f7"
-THING_PRIVATE_KEY_PATH = "/Users/jbourgeois/Desktop/private-key"
+THING_ID = "test-thing-cf01"
+THING_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1NDg5MTc0MzIsImV4cCI6MTg2NDQ5NzAzMiwiYXVkIjoiaHR0cHM6Ly9kd2QudHVkZWxmdC5ubDo0NDMvYXBpIn0.S1BOVX_Rt_2IjZio67EXSE0iyFcgEsDaJyLu09uLlu3DrzuQwV5mr-y82TBg2O5A4sIeB8pScbjTeIPJ9rjQrJOry6jgvYQT2hVQVzzdC69M5bvOkIHSGzGnBX0f14tdmNHUTDnSt05sO1S-a1E_FecMayWs6SGQGmShITmj4i8AHZ0owJub37r2IilEi0tSrI_m6Ga1Jh22uaKN12em-gHsb4U_rYGpMyo0Lmn7edxO1XrSSPG_vk-B9rY_qM8VW7xy2v6KXaj2o5OxqgID5OTpHMc6Ak5bEKnzBPD2WhUb_S5efiech1ydUoP3TAHb59c_0-nmDRoBDUinQrNVKeqQcYTU71_K4Xhmfgv-Ev1sI4_81OvAUzjawjjXKjnetDwCEqfq9YYK5OKRciCTvl7KPt0xJAzgMb5uOHDuYTDqzWr5HhjElETtiLGv3ZM6nNyw44Yv5SsSabG3WUIC4Si7CSYud6vKNZQbUDhDZ15vlVJ1-QRsWgRapaHByxduaKQj_iOCEdfq6RFo_LKgvQNMUm3DVWtf4zMnQe_FqiP6Urc40_9tmss8GV-snWwwfEyjbGeUcuX-r_8G56HRALgAwiZ0ZQWVIdW3w6o-baCJSf21tG2AJCBvFbybwtC3Sp8TyrhusmnO74XB4QATSIR0IySszaeKfl5D3S5Rc9c"
 
 # Instantiate a thing with its credential
-my_thing = Thing(thing_id=THING_ID, private_key_path=THING_PRIVATE_KEY_PATH)
+my_thing = Thing(thing_id=THING_ID, token=THING_TOKEN)
 
 # We can fetch the details of our thing
 my_thing.read()
