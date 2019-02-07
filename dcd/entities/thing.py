@@ -120,25 +120,25 @@ class Thing:
             # self.test()
 
     def to_json(self):
-        p = {}
+        t = {}
         if self.thing_id is not None:
-            p["id"] = self.thing_id
+            t["id"] = self.thing_id
         if self.name is not None:
-            p["name"] = self.name
+            t["name"] = self.name
         if self.description is not None:
-            p["description"] = self.description
+            t["description"] = self.description
         if self.thing_type is not None:
-            p["type"] = self.thing_type
+            t["type"] = self.thing_type
 
-        p["properties"] = []
+        t["properties"] = []
         for prop in self.properties:
-            p["properties"].append(prop.to_json())
+            t["properties"].append(prop.to_json())
 
         if self.registered_at is not None:
-            p["registered_at"] = self.registered_at
+            t["registered_at"] = self.registered_at
         if self.unregistered_at is not None:
-            p["unregistered_at"] = self.registered_at
-        return p
+            t["unregistered_at"] = self.registered_at
+        return t
 
     def read(self):
         uri = self.http_uri + "/things/" + self.thing_id
@@ -150,12 +150,12 @@ class Thing:
             self.thing_type = json["thing"]["type"]
             self.registered_at = json["thing"]["registered_at"]
             self.unregistered_at = json["thing"]["unregistered_at"]
-            self.properties = []
+            self.properties = {}
 
             for json_property in json["thing"]["properties"]:
                 prop = Property(json_property=json_property)
                 prop.belongs_to(self)
-                self.properties.append(prop)
+                self.properties[prop.property_id] = prop
 
     def find_property_by_name(self, property_name_to_find):
         for thing_property in self.properties:
