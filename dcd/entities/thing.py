@@ -131,8 +131,9 @@ class Thing:
             t["type"] = self.thing_type
 
         t["properties"] = []
-        for prop in self.properties:
-            t["properties"].append(prop.to_json())
+        if self.properties is not None:
+            for index, prop in self.properties.items():
+                t["properties"].append(prop.to_json())
 
         if self.registered_at is not None:
             t["registered_at"] = self.registered_at
@@ -142,7 +143,7 @@ class Thing:
 
     def read(self):
         uri = self.http_uri + "/things/" + self.thing_id
-        headers = {'Authorization': 'bearer ' + self.token};
+        headers = {'Authorization': 'bearer ' + self.token}
         json = requests.get(uri, headers=headers, verify=verifyCert).json()
         if json["thing"] is not None:
             self.name = json["thing"]["name"]
@@ -158,9 +159,9 @@ class Thing:
                 self.properties[prop.property_id] = prop
 
     def find_property_by_name(self, property_name_to_find):
-        for thing_property in self.properties:
-            if thing_property.name == property_name_to_find:
-                return thing_property
+        for index, prop in self.properties.items():
+            if prop.name == property_name_to_find:
+                return prop
 
     def create_property(self, name, property_type):
         my_property = Property(name=name,
