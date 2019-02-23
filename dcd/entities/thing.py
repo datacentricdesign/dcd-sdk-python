@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from threading import Thread
 from dcd.entities.property import Property
+from dcd.entities.property_type import PropertyType
 import time
 import requests
 import json
@@ -180,3 +181,24 @@ class Thing:
         global mqtt_connected, client
         if mqtt_connected:
             client.publish(topic, json.dumps(property.value_to_json()))
+
+    def read_property(self, property_id, from_ts=None, to_ts=None):
+        prop = self.properties[property_id]
+        if prop is not None:
+            uri = self.http_uri + "/things/" + self.thing_id
+            uri += "/properties/" + property_id
+            if from_ts is not None and to_ts is not None:
+                uri += "?from=" + str(from_ts) + "&to=" + str(to_ts)
+            headers = {'Authorization': 'bearer ' + self.token}
+            json_result = requests.get(uri, headers=headers, verify=verifyCert).json()
+
+            if json_result["property"] is not None:
+                prop.name = json_result['property']['name']
+                prop.description = json_result['property']['description']
+                prop.property_type = PropertyType[json_result['property']['type']]
+                prop.dimensions = json_result['property']['dimensions']
+                prop.values = json_result['property']['values']
+                return prop
+            raise ValueError("read_property() - unknown response: " + json_result)
+        raise ValueError("Property id '" + property_id + "' not part of Thing '"
+                         + self.thing_id + "'. Did you call read_thing() first?")

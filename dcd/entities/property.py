@@ -75,6 +75,9 @@ class Property:
         self.values.append(values_with_ts)
         self.entity.update_property(self)
 
+    def read(self, from_ts=None, to_ts=None):
+        self.entity.read_property(self.property_id, from_ts, to_ts)
+
     def subscribe(self, uri):
         self.subscribers.append(uri)
 

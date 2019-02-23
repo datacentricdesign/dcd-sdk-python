@@ -8,7 +8,7 @@ with open('LICENSE') as f:
 
 setup(
     name='dcd-sdk',
-    version='0.0.5',
+    version='0.0.6',
     author='Jacky Bourgeois',
     author_email='jacky@datacentricdesign.org',
     description='A Python SDK to interact with the Data-Centric Design Hub',
