@@ -2,55 +2,25 @@ import paho.mqtt.client as mqtt
 from threading import Thread
 from dcd.entities.property import Property
 from dcd.entities.property_type import PropertyType
-import time
 import requests
 import json
 
-verifyCert=False
+from dcd.helpers.mqtt import mqtt_result_code
+
 requests.packages.urllib3.disable_warnings()
 
-client = None
-mqtt_connected = False
+verifyCert = True
 
-# The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
+from dotenv import load_dotenv
+import os
 
-    global mqtt_connected
-    mqtt_connected = True
+load_dotenv()
+MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
+MQTT_PORT = os.getenv('MQTT_PORT', 8883)
+HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl/api')
 
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    client.subscribe("/things/#")
-
-
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.payload))
-
-
-def init_mqtt(thing_id, token):
-    print('init mqtt')
-    global client
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-
-    # mqtt.on_subscribe = on_subscribe
-    # mqtt.on_publish = on_publish
-    # mqtt.on_disconnect = on_disconnect
-    # mqtt.on_log = on_log
-
-    client.connect(options['mqtt_host'], options['mqtt_port'], 60)
-    client.username_pw_set(username=thing_id,
-                           password=token)
-
-    # Blocking call that processes network traffic, dispatches callbacks and
-    # handles reconnecting.
-    # Other loop*() functions are available that give a threaded interface and a
-    # manual interface.
-    client.loop_forever()
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 def generate_token(private_key_path):
     # Read key from file
@@ -65,12 +35,6 @@ def generate_token(private_key_path):
     #                         datetime.timedelta(minutes=5))
     return ""
 
-options = {
-    'mqtt_host': 'dwd.tudelft.nl',
-    'mqtt_port': 8883,
-    'http_uri': 'https://dwd.tudelft.nl/api'
-}
-
 
 class Thing:
     """"A DCD 'Thing' represents a physical or virtual entity collecting data."""
@@ -83,8 +47,7 @@ class Thing:
                  properties=(),
                  json_thing=None,
                  private_key_path=None,
-                 token=None,
-                 on_connect_callback=None):
+                 token=None):
 
         self.properties = []
         if json_thing is not None:
@@ -96,7 +59,7 @@ class Thing:
             for json_property in json_thing.properties:
                 prop = Property(json_property=json_property)
                 prop.belongs_to(self)
-                self.properties.append(prop)
+                self.properties[prop.property_id] = prop
 
             self.registered_at = json_thing.registered_at
             self.unregistered_at = json_thing.unegistered_at
@@ -108,17 +71,20 @@ class Thing:
             self.properties.extend(properties)
             self.private_key_path = private_key_path
 
+        self.mqtt_client = None
+        self.mqtt_connected = False
+
+        self.logger = logging.getLogger(self.thing_id or "Thing")
+
         if self.thing_id is not None:
-            self.http_uri = options['http_uri']
+            self.http_uri = HTTP_URI
             if token is not None:
                 self.token = token
             else:
                 self.token = generate_token(private_key_path)
 
-            self.thread_mqtt = Thread(target = init_mqtt, args = (self.thing_id, self.token))
+            self.thread_mqtt = Thread(target=self.init_mqtt)
             self.thread_mqtt.start()
-
-            # self.test()
 
     def to_json(self):
         t = {}
@@ -145,16 +111,18 @@ class Thing:
     def read(self):
         uri = self.http_uri + "/things/" + self.thing_id
         headers = {'Authorization': 'bearer ' + self.token}
-        json = requests.get(uri, headers=headers, verify=verifyCert).json()
-        if json["thing"] is not None:
-            self.name = json["thing"]["name"]
-            self.description = json["thing"]["description"]
-            self.thing_type = json["thing"]["type"]
-            self.registered_at = json["thing"]["registered_at"]
-            self.unregistered_at = json["thing"]["unregistered_at"]
+        json_result = requests.get(uri, headers=headers,
+                                   verify=verifyCert).json()
+        if json_result["thing"] is not None:
+            json_thing = json_result["thing"]
+            self.name = json_thing["name"]
+            self.description = json_thing["description"]
+            self.thing_type = json_thing["type"]
+            self.registered_at = json_thing["registered_at"]
+            self.unregistered_at = json_thing["unregistered_at"]
             self.properties = {}
 
-            for json_property in json["thing"]["properties"]:
+            for json_property in json_thing["properties"]:
                 prop = Property(json_property=json_property)
                 prop.belongs_to(self)
                 self.properties[prop.property_id] = prop
@@ -173,14 +141,15 @@ class Thing:
                                  json=my_property.to_json())
         created_property = Property(json_property=response.json()['property'])
         created_property.belongs_to(self)
-        self.properties.append(created_property)
+        self.properties[created_property.property_id] = created_property
         return created_property
 
-    def update_property(self, property):
-        topic = "/things/" + self.thing_id + "/properties/" + property.property_id
-        global mqtt_connected, client
-        if mqtt_connected:
-            client.publish(topic, json.dumps(property.value_to_json()))
+    def update_property(self, prop):
+        topic = "/things/" + self.thing_id + "/properties/" + prop.property_id
+        if self.mqtt_connected:
+            self.logger.debug('Updating property ' + prop.property_id)
+            self.mqtt_client.publish(topic,
+                                     json.dumps(prop.value_to_json()))
 
     def read_property(self, property_id, from_ts=None, to_ts=None):
         prop = self.properties[property_id]
@@ -190,15 +159,57 @@ class Thing:
             if from_ts is not None and to_ts is not None:
                 uri += "?from=" + str(from_ts) + "&to=" + str(to_ts)
             headers = {'Authorization': 'bearer ' + self.token}
-            json_result = requests.get(uri, headers=headers, verify=verifyCert).json()
+            json_result = requests.get(uri, headers=headers,
+                                       verify=verifyCert).json()
 
             if json_result["property"] is not None:
                 prop.name = json_result['property']['name']
                 prop.description = json_result['property']['description']
-                prop.property_type = PropertyType[json_result['property']['type']]
+                prop.property_type = PropertyType[
+                    json_result['property']['type']]
                 prop.dimensions = json_result['property']['dimensions']
                 prop.values = json_result['property']['values']
                 return prop
-            raise ValueError("read_property() - unknown response: " + json_result)
+            raise ValueError(
+                "read_property() - unknown response: " + json_result)
         raise ValueError("Property id '" + property_id + "' not part of Thing '"
                          + self.thing_id + "'. Did you call read_thing() first?")
+
+    def init_mqtt(self):
+        self.logger.info(
+            'Initialising MQTT connection for Thing \'' + self.thing_id + '\'')
+
+        self.mqtt_client = mqtt.Client()
+        self.mqtt_client.on_connect = self.on_mqtt_connect
+        self.mqtt_client.on_message = self.on_mqtt_message
+
+        # self.mqtt_client.on_subscribe = self.on_mqtt_subscribe
+        # mqtt.on_publish = on_publish
+        # mqtt.on_disconnect = on_disconnect
+        # mqtt.on_log = on_log
+
+        self.mqtt_client.username_pw_set(username=self.thing_id,
+                                         password=self.token)
+        self.mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
+
+        # Blocking call that processes network traffic, dispatches callbacks and
+        # handles reconnecting.
+        # Other loop*() functions are available that give a threaded interface and a
+        # manual interface.
+        self.mqtt_client.loop_forever()
+
+    # The callback for when the client receives a CONNACK response from the server.
+    def on_mqtt_connect(self, client, userdata, flags, rc):
+        self.logger.info(mqtt_result_code(rc))
+
+        self.mqtt_connected = True
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+
+        # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
+
+    # The callback for when a PUBLISH message is received from the server.
+    def on_mqtt_message(self, client, userdata, msg):
+        self.logger.info("Received message on topic "
+                    + msg.topic + ": " + str(msg.payload))
