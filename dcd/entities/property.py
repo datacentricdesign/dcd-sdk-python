@@ -1,7 +1,5 @@
 import math
 
-from dcd.entities.thing import ThingCredentials
-import requests
 from datetime import datetime
 from enum import Enum
 
@@ -41,6 +39,7 @@ class Property:
                  entity=None):
 
         self.subscribers = []
+        self.entity = entity
 
         if json_property is not None:
             self.property_id = json_property['id']
@@ -84,7 +83,7 @@ class Property:
     def belongs_to(self, entity):
         self.entity = entity
 
-    def update_values(self, values, time_ms=None):
+    def update_values(self, values, time_ms=None, file_name=None):
         ts = time_ms
         if ts is None:
             dt = datetime.utcnow()
@@ -97,58 +96,17 @@ class Property:
         # (it requires more advanced sync management)
         self.values = []
         self.values.append(values_with_ts)
-        self.entity.update_property(self)
+
+        if self.property_type == PropertyType.VIDEO and file_name is None:
+            raise ValueError('Missing file name for VIDEO property update.')
+
+        self.entity.update_property(self, file_name)
 
     def read(self, from_ts=None, to_ts=None):
         self.entity.read_property(self.property_id, from_ts, to_ts) 
 
     def subscribe(self, uri):
         self.subscribers.append(uri)
-
-    """----------------------------------------------------------------------------
-        Uploads file to the property given filename, file type,  data(list of values
-        for the property that will receive it)  an authentification class auth, 
-        which contains the thing ID and token, and url (by default gets 
-        reconstructed automatically)
-
-        FOR VIDEO:
-        data dictionary  must have following pairs  start_ts & duration defined
-        like so : {'start_ts': ... , 'duration': ...}
-    ----------------------------------------------------------------------------""" 
-    def upload_file(self, file_name, file_type, data, auth, url = None):
-        #  print statement for what function will do
-        print('Uploading ' + file_name + ' of file type ' + file_type +
-              ' to property ' + self.name)
-
-        if file_type == 'video': #  Uploading file of type video 
-            #  in files, we create a dictionary that maps 'video' to a tuple 
-            #  (read only list) composed of extra data : name, file object
-            #  type of video (mp4 by default), and expiration tag (also a dict)(?)
-            files = {'video': ( file_name, open('./' + file_name, 'rb') ,
-                                'video/mp4' , {'Expires': '0'} ) }
-
-            #  creating our video url for upload
-            if url is None:
-                url = 'https://dwd.tudelft.nl/api/things/' + auth.THING_ID + \
-                      '/properties/' + self.property_id + '/values/' + \
-                      str(data['start_ts']) + ',' + str(data['duration']) + '/file'
-        else:
-            print("File type not yet supported")
-            return(-1)
-
-        
-        
-
-        #  sending our post method to upload this file, using our authentification
-        #  data dict is converted into a list for all the values of the property
-        response = requests.post(url=url, data= {'values': data.values()}, files=files,
-                                 headers={ "Authorization": "bearer " + 
-                                 auth.THING_TOKEN})
-
-         
-        print(response.status_code) #  print response code of the post
-                                    #  method, by the requests library 
-        return(response.status_code)  
  
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)
