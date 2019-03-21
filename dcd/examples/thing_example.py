@@ -1,7 +1,7 @@
-# This example shows how to establish a connection
+# This example shows how to establish a connection 
 # with the DCD HUB using the credentials of a thing.
 
-# This is a typical case for a Python code running
+# This is a typical case for a Python code running 
 # on a device to collect data.
 
 from random import random
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import os
 
 from ..entities.thing import Thing
-from ..entities.property_type import PropertyType
+from ..entities.property import PropertyType
 
 # The thing ID and access token
 load_dotenv()

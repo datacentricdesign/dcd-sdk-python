@@ -1,25 +1,23 @@
-import paho.mqtt.client as mqtt
 from threading import Thread
-from dcd.entities.property import Property
-from dcd.entities.property_type import PropertyType
+from dcd.entities.property import Property, PropertyType
+from dcd.helpers.mqtt import mqtt_result_code
+from dotenv import load_dotenv
+import paho.mqtt.client as mqtt
 import requests
 import json
+import logging
+import os
 
-from dcd.helpers.mqtt import mqtt_result_code
 
 requests.packages.urllib3.disable_warnings()
 
 verifyCert = True
-
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
 MQTT_PORT = os.getenv('MQTT_PORT', 8883)
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl/api')
 
-import logging
 logging.basicConfig(level=logging.DEBUG) 
 
 def generate_token(private_key_path):
@@ -35,6 +33,15 @@ def generate_token(private_key_path):
     #                         datetime.timedelta(minutes=5))
     return ""
 
+"""----------------------------------------------------------------------------
+    Convenience class, packs id and token of a thing in standard format
+----------------------------------------------------------------------------"""
+class ThingCredentials:
+
+    #  constructor
+    def __init__(self, THING_ID, THING_TOKEN):
+        self.THING_TOKEN = THING_TOKEN
+        self.THING_ID = THING_ID
 
 class Thing:
     """"A DCD 'Thing' represents a physical or virtual entity collecting data."""
@@ -172,7 +179,7 @@ class Thing:
                 return prop
             raise ValueError(
                 "read_property() - unknown response: " + json_result)
-        raise ValueError("Property id '" + property_id + "' not part of Thing '"
+        raise ValueError("Property id '" + property_id + "' not part of Thing '" 
                          + self.thing_id + "'. Did you call read_thing() first?")
 
 
