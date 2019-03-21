@@ -89,7 +89,9 @@ class Property:
 
         FOR VIDEO:
         data dictionary  must have following pairs  start_ts & duration defined
-    ----------------------------------------------------------------------------"""
+        like so : {'start_ts': ... , 'duration': ...}
+    ----------------------------------------------------------------------------""" 
+
     def upload_file(self, file_name, file_type, data, url, auth):
         #  print statement for what function will do
         print('Uploading ' + file_name + ' of file type ' + file_type +
@@ -110,9 +112,9 @@ class Property:
         
         #  sending our post method to uplod this file, using our authentification
         #  data dict is converted into a list for all the values of the property
-        response = requests.post(url=url, data= {'values': data.items()}, files=files,
+        response = requests.post(url=url, data= {'values': data.values()}, files=files,
                                  headers={ "Authorization": "bearer " + 
-                                 auth.THING_TOKEN}) 
+                                 auth.THING_TOKEN})
 
          
         print(response.status_code) #  print response code of the post
