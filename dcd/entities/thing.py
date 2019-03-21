@@ -175,17 +175,25 @@ class Thing:
         raise ValueError("Property id '" + property_id + "' not part of Thing '"
                          + self.thing_id + "'. Did you call read_thing() first?")
 
+
     """----------------------------------------------------------------------------
         Search for a property in thing by name, create it if not found & return it
     ----------------------------------------------------------------------------""" 
     def find_or_create(self, property_name, property_type):
 
-        if self.find_property_by_name(property_name) is None:
+        if self.find_property_by_name(property_name) is None: #  property not found
             self.create_property(name=property_name,
                                  property_type=property_type)
-            
-    return self.find_property_by_name(property_name)
 
+        return self.find_property_by_name(property_name)
+
+   
+    """----------------------------------------------------------------------------
+        Recording video function, will find or create video property in current 
+        thing, with default name "Wheelchair Webcam"
+    ----------------------------------------------------------------------------"""
+    def record_video(self, property_name="Wheelchair Webcam"):
+         return         
 
     def init_mqtt(self):
         self.logger.info(
