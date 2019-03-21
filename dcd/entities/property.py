@@ -1,7 +1,7 @@
 import math
 
-from dcd.entities.thing import ThingCredentials 
-
+from dcd.entities.thing import ThingCredentials
+import requests
 from datetime import datetime
 from enum import Enum
 
@@ -107,15 +107,15 @@ class Property:
 
     """----------------------------------------------------------------------------
         Uploads file to the property given filename, file type,  data(list of values
-        for the property that will receive it) , url, and an authentification class,
-        which contains the thing ID and token.
+        for the property that will receive it)  an authentification class auth, 
+        which contains the thing ID and token, and url (by default gets 
+        reconstructed automatically)
 
         FOR VIDEO:
         data dictionary  must have following pairs  start_ts & duration defined
         like so : {'start_ts': ... , 'duration': ...}
     ----------------------------------------------------------------------------""" 
-
-    def upload_file(self, file_name, file_type, data, url, auth):
+    def upload_file(self, file_name, file_type, data, auth, url = None):
         #  print statement for what function will do
         print('Uploading ' + file_name + ' of file type ' + file_type +
               ' to property ' + self.name)
@@ -128,12 +128,18 @@ class Property:
                                 'video/mp4' , {'Expires': '0'} ) }
 
             #  creating our video url for upload
-            url = 'https://dwd.tudelft.nl/api/things/' + auth.THING_ID + \
-                  '/properties/' + self.property_id + '/values/' + \
-                  str(data['start_ts']) + ',' + str(data['duration']) + '/file'
+            if url is None:
+                url = 'https://dwd.tudelft.nl/api/things/' + auth.THING_ID + \
+                      '/properties/' + self.property_id + '/values/' + \
+                      str(data['start_ts']) + ',' + str(data['duration']) + '/file'
+        else:
+            print("File type not yet supported")
+            return(-1)
 
         
-        #  sending our post method to uplod this file, using our authentification
+        
+
+        #  sending our post method to upload this file, using our authentification
         #  data dict is converted into a list for all the values of the property
         response = requests.post(url=url, data= {'values': data.values()}, files=files,
                                  headers={ "Authorization": "bearer " + 
@@ -141,7 +147,7 @@ class Property:
 
          
         print(response.status_code) #  print response code of the post
-                                    #  method, by  the requests library 
+                                    #  method, by the requests library 
         return(response.status_code)  
  
 def unix_time_millis(dt):

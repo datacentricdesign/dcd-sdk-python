@@ -1,5 +1,5 @@
 # This example shows interact with the DCD Hub to explore the data 
-# within a notebook like Jupiter.
+# within a notebook like Jupiter. 
 
 from ..entities.thing import Thing
 from ..entities.person import Person
@@ -25,4 +25,4 @@ dcd_hub = me.dcd_hub
 #for person in persons_with_location:
 
 
-d#cd_hub.list_things(has_)
+#cd_hub.list_things(has_)

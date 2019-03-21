@@ -1,12 +1,16 @@
+
 from threading import Thread
-from dcd.entities.property import Property, PropertyType
+from dcd.entities.property import Property, PropertyType 
 from dcd.helpers.mqtt import mqtt_result_code
-from dotenv import load_dotenv
-import paho.mqtt.client as mqtt
+from dotenv import load_dotenv 
+import paho.mqtt.client as mqtt 
 import requests
 import json
 import logging
 import os
+import asyncio
+import time
+import math
 
 
 requests.packages.urllib3.disable_warnings()
@@ -186,7 +190,7 @@ class Thing:
     """----------------------------------------------------------------------------
         Search for a property in thing by name, create it if not found & return it
     ----------------------------------------------------------------------------""" 
-    def find_or_create(self, property_name, property_type):
+    def find_or_create_property(self, property_name, property_type): 
 
         if self.find_property_by_name(property_name) is None: #  property not found
             self.create_property(name=property_name,
@@ -195,12 +199,69 @@ class Thing:
         return self.find_property_by_name(property_name)
 
    
-    """----------------------------------------------------------------------------
+    """---------------------------------------------------------------------------- 
         Recording video function, will find or create video property in current 
-        thing, with default name "Wheelchair Webcam"
+        thing, with default property name "Wheelchair Webcam", and thing 
+        credentials in ThingCredentials class wrapper
     ----------------------------------------------------------------------------"""
-    def record_video(self, property_name="Wheelchair Webcam"):
-         return         
+    def record_video(self, credentials, current_video_file = None,
+                     current_video_start_ts = None, property_name="Wheelchair Webcam"):   
+
+
+        #  Finding or creating our video property
+        property = self.find_or_create_property(property_name, PropertyType.VIDEO) 
+
+        loop = asyncio.get_event_loop()
+
+        #  This should be removed to  another module, but not currently
+        class SubprocessProtocol(asyncio.SubprocessProtocol): 
+
+            #  redefining variables so they exist within the protocol class
+            def __init__(self, current_video_file, current_video_start_ts):
+                self.current_video_file = current_video_file
+                self.current_video_start_ts = current_video_start_ts
+
+            def pipe_data_received(self, fd, data):
+                # if avconv is opening a new file, there is one ready to send
+                line = str(data)
+                if "Opening" in line:
+                    new_time = math.floor(time.time() * 1000)
+                    new_file = line.split("'")[1]
+                    print(new_file)
+
+                    if current_video_file is not None:
+                        thread = Thread(target=property.upload_file,
+                                        args=(self.current_video_file,
+                                              'video',
+                                              {'start_ts': self.current_video_start_ts,
+                                               'duration': new_time - self.current_video_start_ts},
+                                              credentials
+                                              ) 
+                                        ) 
+                        thread.start()
+                    self.current_video_start_ts = new_time
+                    self.current_video_file = new_file
+
+            def connection_lost(self, exc):
+                loop.stop()  # end loop.run_forever()
+
+        try:
+            loop.run_until_complete(loop.subprocess_exec(SubprocessProtocol(current_video_file,
+                                                                            current_video_start_ts),
+                                                         "avconv",
+                                                         "-f", "video4linux2",
+                                                         "-i", "/dev/video0",
+                                                         "-map", "0",
+                                                         "-f", "segment",
+                                                         "-segment_time", "30",
+                                                         "-segment_format", "mp4",
+                                                         "capture-%03d.mp4"))
+
+            loop.run_forever()
+        finally:
+            print("Closing recording process.")
+            loop.close()
+
 
     def init_mqtt(self):
         self.logger.info(
@@ -219,7 +280,7 @@ class Thing:
                                          password=self.token)
         self.mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
 
-        # Blocking call that processes network traffic, dispatches callbacks and
+        # Blocking call that processes network traffic, dispatches callbacks and 
         # handles reconnecting.
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
