@@ -81,6 +81,12 @@ class Property:
     def subscribe(self, uri):
         self.subscribers.append(uri)
 
+    """----------------------------------------------------------------------------
+        Uploads file to the property given filename and url. Uses Requests library 
+    ----------------------------------------------------------------------------"""
+    def upload_file(self, file_name, url): 
+        return 
+ 
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)
     return math.floor((dt - epoch).total_seconds() * 1000.0)
