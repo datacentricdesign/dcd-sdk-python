@@ -1,5 +1,8 @@
 from enum import Enum
 
+"""----------------------------------------------------------------------------
+    Class that contains all possible property types for a property in a thing
+----------------------------------------------------------------------------"""
 class PropertyType(Enum):
     ONE_DIMENSION = "1D"
     TWO_DIMENSIONS = "2D"
@@ -16,3 +19,14 @@ class PropertyType(Enum):
     ACCELEROMETER = "ACCELEROMETER"
     VIDEO = "VIDEO"
     CLASS = "CLASS"
+
+
+"""----------------------------------------------------------------------------
+    Convenience class, packs id and token of a thing in standard format
+----------------------------------------------------------------------------"""
+class ThingCredentials:
+
+    #  constructor
+    def __init__(self, THING_ID, THING_TOKEN):
+        self.THING_TOKEN = THING_TOKEN
+        self.THING_ID = THING_ID

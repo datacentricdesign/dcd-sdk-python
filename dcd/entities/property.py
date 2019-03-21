@@ -1,6 +1,7 @@
 import math
 
-from dcd.entities.dcd_primitives import PropertyType
+from dcd.entities.dcd_primitives import PropertyType, ThingCredentials 
+
 from datetime import datetime
 
 class Property:
@@ -76,16 +77,20 @@ class Property:
         self.entity.update_property(self)
 
     def read(self, from_ts=None, to_ts=None):
-        self.entity.read_property(self.property_id, from_ts, to_ts)
+        self.entity.read_property(self.property_id, from_ts, to_ts) 
 
     def subscribe(self, uri):
         self.subscribers.append(uri)
 
     """----------------------------------------------------------------------------
-        Uploads file to the property given filename, file type,  data(dict) , url
-        and authentification class 
+        Uploads file to the property given filename, file type,  data(list of values
+        for the property that will receive it) , url, and an authentification class,
+        which contains the thing ID and token.
+
+        FOR VIDEO:
+        data dictionary  must have following pairs  start_ts & duration defined
     ----------------------------------------------------------------------------"""
-    def upload_file(self, file_name, file_type, data, url, ):
+    def upload_file(self, file_name, file_type, data, url, auth):
         #  print statement for what function will do
         print('Uploading ' + file_name + ' of file type ' + file_type +
               ' to property ' + self.name)
@@ -97,9 +102,17 @@ class Property:
             files = {'video': ( file_name, open('./' + file_name, 'rb') ,
                                 'video/mp4' , {'Expires': '0'} ) }
 
-            response = requests.post(url=url, data=data, files=files,
-                                     headers={ "Authorization": "bearer " + 
-                                     THING_TOKEN})
+            #  creating our video url for upload
+            url = 'https://dwd.tudelft.nl/api/things/' + auth.THING_ID + \
+                  '/properties/' + self.property_id + '/values/' + \
+                  str(data['start_ts']) + ',' + str(data['duration']) + '/file'
+
+        
+        #  sending our post method to uplod this file, using our authentification
+        #  data dict is converted into a list for all the values of the property
+        response = requests.post(url=url, data= {'values': data.items()}, files=files,
+                                 headers={ "Authorization": "bearer " + 
+                                 auth.THING_TOKEN}) 
 
          
         print(response.status_code) #  print response code of the post
