@@ -6,10 +6,9 @@ import time
 
 class VideoRecorder(asyncio.SubprocessProtocol):
 
-    def __init__(self, current_video_file, current_video_start_ts,
-                 video_property, port="/dev/video0", segment_size="30"):
-        self.current_video_file = current_video_file
-        self.current_video_start_ts = current_video_start_ts
+    def __init__(self, video_property, port='/dev/video0', segment_size='30'):
+        self.current_video_file = None
+        self.current_video_start_ts = None
         self.property = video_property
         self.port = port
         self.segment_size = segment_size

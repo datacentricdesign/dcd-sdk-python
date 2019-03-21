@@ -207,19 +207,19 @@ class Thing:
 
     """---------------------------------------------------------------------------- 
         Recording video function, will find or create video property in current 
-        thing, with default property name "Webcam", and thing  credentials in
+        thing, with default property name "WebCam", and thing  credentials in
         ThingCredentials class wrapper
     ----------------------------------------------------------------------------"""
-    def start_video_recording(self, credentials, current_video_file = None,
-                     current_video_start_ts = None, property_name="Webcam"):
+    def start_video_recording(self,
+                              property_name='WebCam',
+                              port='/dev/video0',
+                              segment_size='30'):
 
         #  Finding or creating our video property
         video_property = self.find_or_create_property(property_name,
                                                       PropertyType.VIDEO)
 
-        self.video_recorder = VideoRecorder(current_video_file,
-                                              current_video_start_ts,
-                                              video_property)
+        self.video_recorder = VideoRecorder(video_property, port, segment_size)
 
     def stop_video_recording(self):
         if self.video_recorder is not None:
