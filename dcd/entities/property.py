@@ -1,6 +1,6 @@
 import math
 
-from dcd.entities.property_type import PropertyType
+from dcd.entities.dcd_primitives import PropertyType
 from datetime import datetime
 
 class Property:
@@ -82,10 +82,29 @@ class Property:
         self.subscribers.append(uri)
 
     """----------------------------------------------------------------------------
-        Uploads file to the property given filename and url. Uses Requests library 
+        Uploads file to the property given filename, file type,  data(dict) , url
+        and authentification class 
     ----------------------------------------------------------------------------"""
-    def upload_file(self, file_name, url): 
-        return 
+    def upload_file(self, file_name, file_type, data, url, ):
+        #  print statement for what function will do
+        print('Uploading ' + file_name + ' of file type ' + file_type +
+              ' to property ' + self.name)
+
+        if file_type == 'video': #  Uploading file of type video 
+            #  in files, we create a dictionary that maps 'video' to a tuple 
+            #  (read only list) composed of extra data : name, file object
+            #  type of video (mp4 by default), and expiration tag (also a dict)(?)
+            files = {'video': ( file_name, open('./' + file_name, 'rb') ,
+                                'video/mp4' , {'Expires': '0'} ) }
+
+            response = requests.post(url=url, data=data, files=files,
+                                     headers={ "Authorization": "bearer " + 
+                                     THING_TOKEN})
+
+         
+        print(response.status_code) #  print response code of the post
+                                    #  method, by  the requests library 
+        return(response.status_code)  
  
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)
