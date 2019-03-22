@@ -25,7 +25,7 @@ class VideoRecorder(asyncio.SubprocessProtocol):
                                           "-f", "video4linux2",
                                           "-i", self.port,
                                           "-map", "0",
-                                          "-f", "segment", "-strftime", "1",
+                                          "-f", "segment",
                                           "-segment_time", self.segment_size,
                                           "-segment_format",
                                           "mp4",
