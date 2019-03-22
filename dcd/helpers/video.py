@@ -18,7 +18,7 @@ class VideoRecorder(asyncio.SubprocessProtocol):
 
         try:
             self.loop.run_until_complete(
-                self.loop.subprocess_exec(self,
+                self.loop.subprocess_exec(VideoRecorder,
                                           "avconv",
                                           "-f", "video4linux2",
                                           "-i", self.port,
