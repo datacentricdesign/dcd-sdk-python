@@ -263,6 +263,8 @@ class Thing:
         #  creating our video url for upload
         url = self.http_uri + '/things/' + self.thing_id\
               + '/properties/' + prop.property_id
+
+        self.logger.debug(prop.to_json())
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
         response = requests.put(url=url,
