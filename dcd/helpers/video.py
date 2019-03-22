@@ -56,9 +56,10 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
 
             if self.current_video_file is not None:
                 file_name = self.current_video_file
-                values = (self.current_video_start_ts, new_time - self.current_video_start_ts)
+                ts = self.current_video_start_ts
+                values = (new_time - ts)
                 thread = Thread(target=video_property.update_values,
-                                kwargs={"values":values, "file_name":file_name})
+                                kwargs={"values":values, "time_ms": ts, "file_name":file_name})
                 thread.start()
             self.current_video_start_ts = new_time
             self.current_video_file = new_file
