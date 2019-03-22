@@ -263,7 +263,7 @@ class Thing:
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
         response = requests.put(url=url,
-                                data= {'property': prop.to_json()},
+                                data= prop.to_json(),
                                 files=files,
                                 headers=headers)
 
