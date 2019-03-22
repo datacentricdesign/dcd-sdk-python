@@ -26,7 +26,7 @@ my_thing.read()
 #
 # property_name = 'WebCam'
 # port = '/dev/video'
-# segment_size = '30'
+# segment_size = '30' size of each video segment in seconds
 my_thing.start_video_recording()
 
 # Wait to capture 2 records
