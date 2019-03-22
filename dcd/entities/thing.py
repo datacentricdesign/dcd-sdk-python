@@ -165,7 +165,7 @@ class Thing:
             self.mqtt_client.publish(topic,
                                      json.dumps(prop.value_to_json()))
         else:
-            self.update_property_http(self, prop, file_name)
+            self.update_property_http(prop, file_name=file_name)
 
 
     def read_property(self, property_id, from_ts=None, to_ts=None):
@@ -242,14 +242,14 @@ class Thing:
         files=None
 
         if file_name is not None:
-            self.logger.debug('Uploading ' + prop.file_name
+            self.logger.debug('Uploading ' + file_name
                               + ' to property ' + self.name)
-            if prop.file_name.endswith('.mp4'):
+            if file_name.endswith('.mp4'):
                 #  Uploading file of type video in files,
                 #  we create a dictionary that maps 'video' to a tuple
                 #  (read only list) composed of extra data : name, file object
                 #  type of video (mp4 by default), and expiration tag (also a dict)(?)
-                files = {'video': ( prop.file_name, open('./' + prop.file_name, 'rb'),
+                files = {'video': ( file_name, open('./' + file_name, 'rb'),
                                     'video/mp4' , {'Expires': '0'} ) }
             else:
                 self.logger.error('File type not yet supported,'
@@ -263,7 +263,7 @@ class Thing:
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
         response = requests.put(url=url,
-                                data= {'property': prop},
+                                data= {'property': prop.to_json()},
                                 files=files,
                                 headers=headers)
 
