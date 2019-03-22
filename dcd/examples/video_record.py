@@ -20,6 +20,8 @@ THING_TOKEN = os.environ['THING_TOKEN']
 # Instantiate a thing with its credential
 my_thing = Thing(thing_id=THING_ID, token=THING_TOKEN)
 
+my_thing.read()
+
 # Start recording
 #
 # property_name = 'WebCam'
