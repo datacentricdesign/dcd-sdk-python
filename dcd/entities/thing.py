@@ -165,7 +165,7 @@ class Thing:
             self.mqtt_client.publish(topic,
                                      json.dumps(prop.value_to_json()))
         else:
-            self.update_property_http(self, prop, file_name=file_name)
+            self.update_property_http(self, prop, file_name)
 
 
     def read_property(self, property_id, from_ts=None, to_ts=None):
