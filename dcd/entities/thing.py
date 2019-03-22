@@ -257,18 +257,17 @@ class Thing:
                 return -1
 
         headers = {
-            'Authorization': 'bearer ' + self.token,
-            'Content-Type': 'application/json'
+            'Authorization': 'bearer ' + self.token
         }
         #  creating our video url for upload
+        values = ','.join(map(str, prop.values[0]))
         url = self.http_uri + '/things/' + self.thing_id\
-              + '/properties/' + prop.property_id
+              + '/properties/' + prop.property_id + '/values/' + values + '/file'
 
         self.logger.debug(prop.to_json())
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
-        response = requests.put(url=url,
-                                data=prop.to_json(),
+        response = requests.post(url=url,
                                 files=files,
                                 headers=headers)
 
