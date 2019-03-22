@@ -256,14 +256,17 @@ class Thing:
                                   + 'cancelling property update over HTTP')
                 return -1
 
-        headers = {'Authorization': 'bearer ' + self.token}
+        headers = {
+            'Authorization': 'bearer ' + self.token,
+            'Content-Type': 'application/json'
+        }
         #  creating our video url for upload
         url = self.http_uri + '/things/' + self.thing_id\
               + '/properties/' + prop.property_id
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
         response = requests.put(url=url,
-                                data= prop.to_json(),
+                                data=prop.to_json(),
                                 files=files,
                                 headers=headers)
 
