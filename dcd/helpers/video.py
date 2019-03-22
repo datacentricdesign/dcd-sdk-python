@@ -3,22 +3,24 @@ import asyncio
 import math
 import time
 
+loop = asyncio.get_event_loop()
+video_property=None
 
 class VideoRecorder(asyncio.SubprocessProtocol):
 
-    def __init__(self, video_property, port='/dev/video0', segment_size='30'):
+    def __init__(self, prop, port='/dev/video0', segment_size='30'):
         self.current_video_file = None
         self.current_video_start_ts = None
-        self.property = video_property
+        global video_property
+        video_property = prop
         self.port = port
         self.segment_size = segment_size
-        self.loop = asyncio.get_event_loop()
 
     def start_recording(self):
 
         try:
-            self.loop.run_until_complete(
-                self.loop.subprocess_exec(SubProcessRecorder,
+            loop.run_until_complete(
+                loop.subprocess_exec(SubProcessRecorder,
                                           "avconv",
                                           "-f", "video4linux2",
                                           "-i", self.port,
@@ -27,24 +29,22 @@ class VideoRecorder(asyncio.SubprocessProtocol):
                                           "-segment_time", self.segment_size,
                                           "-segment_format",
                                           "mp4",
-                                          "capture-%03d.mp4", args=(self.property, self.loop)))
+                                          "capture-%03d.mp4"))
 
-            self.loop.run_forever()
+            loop.run_forever()
         finally:
             print("Closing recording process.")
-            self.loop.close()
+            loop.close()
 
     def stop_recording(self):
-        self.loop.stop()
+        loop.stop()
 
 
 class SubProcessRecorder(asyncio.SubprocessProtocol):
 
-    def __init__(self, video_property, event_loop):
+    def __init__(self):
         self.current_video_file = None
         self.current_video_start_ts = None
-        self.property = video_property
-        self.loop = event_loop
 
     def pipe_data_received(self, fd, data):
         # if avconv is opening a new file, there is one ready to send
@@ -57,11 +57,11 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
             if self.current_video_file is not None:
                 file_name = self.current_video_file
                 values = (self.current_video_start_ts, new_time - self.current_video_start_ts)
-                thread = Thread(target=self.property.upload_property,
+                thread = Thread(target=video_property.upload_property,
                                 args=({values:values, file_name:file_name}))
                 thread.start()
             self.current_video_start_ts = new_time
             self.current_video_file = new_file
 
     def connection_lost(self, exc):
-        self.loop.stop()  # end loop.run_forever()
+        loop.stop()  # end loop.run_forever()
