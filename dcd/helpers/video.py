@@ -21,10 +21,10 @@ class VideoRecorder(asyncio.SubprocessProtocol):
         try:
             loop.run_until_complete(
                 loop.subprocess_exec(SubProcessRecorder,
-                                          "avconv",
+                                          "ffmpeg",
                                           "-f", "video4linux2",
                                           "-i", self.port,
-                                          "-map", "0",
+                                          "-reset_timestamps", 1,
                                           "-f", "segment",
                                           "-segment_time", self.segment_size,
                                           "-segment_format",
