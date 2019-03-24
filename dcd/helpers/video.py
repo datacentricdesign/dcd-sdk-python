@@ -3,7 +3,7 @@ import asyncio
 import math
 import time
 
-loop = None
+loop = asyncio.get_event_loop()
 video_property=None
 
 class VideoRecorder(asyncio.SubprocessProtocol):
@@ -19,10 +19,6 @@ class VideoRecorder(asyncio.SubprocessProtocol):
     def start_recording(self):
 
         try:
-            global loop
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            asyncio.get_child_watcher().attach_loop(loop)
             loop.run_until_complete(
                 loop.subprocess_exec(SubProcessRecorder,
                                           "ffmpeg",
