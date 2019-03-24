@@ -22,6 +22,7 @@ class VideoRecorder(asyncio.SubprocessProtocol):
             global loop
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            asyncio.get_child_watcher().attach_loop(loop)
             loop.run_until_complete(
                 loop.subprocess_exec(SubProcessRecorder,
                                           "ffmpeg",
