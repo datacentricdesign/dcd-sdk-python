@@ -11,15 +11,16 @@ class VideoRecorder(asyncio.SubprocessProtocol):
     def __init__(self, prop, port='/dev/video0', segment_size='30'):
         self.current_video_file = None
         self.current_video_start_ts = None
-        global video_property, loop
+        global video_property
         video_property = prop
-        loop = asyncio.get_event_loop()
         self.port = port
         self.segment_size = segment_size
 
     def start_recording(self):
 
         try:
+            global loop
+            loop = asyncio.get_event_loop()
             asyncio.get_child_watcher().attach_loop(loop)
             loop.run_until_complete(
                 loop.subprocess_exec(SubProcessRecorder,
