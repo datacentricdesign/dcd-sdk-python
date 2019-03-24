@@ -3,10 +3,11 @@ import math
 from datetime import datetime
 from enum import Enum
 
-
 """----------------------------------------------------------------------------
     Class that contains all possible property types for a property in a thing
 ----------------------------------------------------------------------------"""
+
+
 class PropertyType(Enum):
     ONE_DIMENSION = "1D"
     TWO_DIMENSIONS = "2D"
@@ -120,11 +121,36 @@ class Property:
         self.entity.update_property(self, file_name)
 
     def read(self, from_ts=None, to_ts=None):
-        self.entity.read_property(self.property_id, from_ts, to_ts) 
+        self.entity.read_property(self.property_id, from_ts, to_ts)
 
     def subscribe(self, uri):
         self.subscribers.append(uri)
- 
+
+    def align_values_to(self, prop2):
+        """ Create if missing, an intermediary row of values
+            for each timestamp in prop2
+        """
+        new_values = []
+        values_index = 0
+        last_val = None
+
+        # We want to create a row of values for each row of property 2
+        for values_prop2 in prop2.values:
+            # As long as our property as values with timestamp lower than property 2
+            while values_index < len(self.values) and self.values[values_index][0] <= values_prop2[0]:
+                last_val = self.values[values_index]
+                values_index += 1
+
+
+            if last_val is not None:
+                # Make a copy, change the timestamp to the one in property 2
+                # and add it to the new list of values.
+                tmp = last_val.copy()
+                tmp[0] = values_prop2[0]
+                new_values.append(tmp)
+
+        self.values = new_values
+
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)
     return math.floor((dt - epoch).total_seconds() * 1000.0)
