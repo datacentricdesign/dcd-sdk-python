@@ -3,7 +3,7 @@ import asyncio
 import math
 import time
 
-loop = asyncio.get_event_loop()
+loop = None
 video_property=None
 
 class VideoRecorder(asyncio.SubprocessProtocol):
@@ -11,8 +11,9 @@ class VideoRecorder(asyncio.SubprocessProtocol):
     def __init__(self, prop, port='/dev/video0', segment_size='30'):
         self.current_video_file = None
         self.current_video_start_ts = None
-        global video_property
+        global video_property, loop
         video_property = prop
+        loop = asyncio.get_event_loop()
         self.port = port
         self.segment_size = segment_size
 
