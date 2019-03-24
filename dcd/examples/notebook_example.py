@@ -1,9 +1,9 @@
-# This example shows interact with the DCD Hub to explore the data
-# within a notebook like Jupiter.
+# This example shows interact with the DCD Hub to explore the data 
+# within a notebook like Jupiter. 
 
 from ..entities.thing import Thing
 from ..entities.person import Person
-from ..entities.property_type import PropertyType
+from ..entities.property import PropertyType
 
 # If you use Jupiter on the DCD Hub, you can skip this step
 # as it is performed automatically.
@@ -25,4 +25,4 @@ dcd_hub = me.dcd_hub
 #for person in persons_with_location:
 
 
-d#cd_hub.list_things(has_)
+#cd_hub.list_things(has_)

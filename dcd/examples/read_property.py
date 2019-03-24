@@ -1,4 +1,4 @@
-# This example shows how to establish a connection
+# This example shows how to establish a connection 
 # with the DCD HUB using the credentials of a thing.
 
 # This is a typical case for a Python code running
@@ -11,7 +11,7 @@ from datetime import datetime
 import math
 
 from ..entities.thing import Thing
-from ..entities.property_type import PropertyType
+from ..entities.property import PropertyType
 
 # The thing ID and access token
 load_dotenv()
