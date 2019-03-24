@@ -127,7 +127,8 @@ class Property:
         self.subscribers.append(uri)
 
     def align_values_to(self, prop2):
-        """ Create if missing, an intermediary row of values
+        """
+            Create if missing, an intermediary row of values
             for each timestamp in prop2
         """
         new_values = []
@@ -150,6 +151,24 @@ class Property:
                 new_values.append(tmp)
 
         self.values = new_values
+
+    def merge(self, prop2):
+        """
+            Create a new Property with id and name of form 'prop1+prop2',
+            concat dimension and values (MUST have same number of rows)
+            and return this new property
+        """
+        prop3 = Property(property_id=self.property_id + '+' + prop2.property_id,
+                         name=self.name + ' + ' + prop2.name)
+
+        # Concat dimensions
+        prop3.dimensions = self.dimensions + prop2.dimensions
+        # Remove timestamps from property 2
+        values2_no_ts = map(lambda x: x[1:], prop2.values)
+        # concat property 1 and 2 (only 1 timestamp from prop 1)
+        prop3.values = [a+b for a,b in zip(self.values, values2_no_ts)]
+
+        return prop3
 
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)
