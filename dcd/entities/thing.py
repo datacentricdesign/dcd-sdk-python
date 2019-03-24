@@ -222,8 +222,8 @@ class Thing:
         self.video_recorder = VideoRecorder(video_property, port, segment_size)
         self.logger.info('Start video recording on property ' + video_property.property_id)
 
-        thread = Thread(target=self.video_recorder.start_recording)
-        thread.start()
+
+        self.video_recorder.start_recording()
 
     def stop_video_recording(self):
         if self.video_recorder is not None:
