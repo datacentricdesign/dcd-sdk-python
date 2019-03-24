@@ -27,7 +27,7 @@ class VideoRecorder(asyncio.SubprocessProtocol):
                                           "-segment_format",
                                           "mp4",
                                           "capture-%03d.mp4",
-                                          kwargs={"loop": self.loop, "video_property": self.video_property}))
+                                          args=(self.loop, self.video_property)))
 
             self.loop.run_forever()
         finally:
