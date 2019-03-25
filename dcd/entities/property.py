@@ -54,6 +54,7 @@ class Property:
                  dimensions=(),
                  json_property=None,
                  values=(),
+                 classes=None,
                  entity=None):
 
         self.subscribers = []
@@ -66,6 +67,7 @@ class Property:
             self.property_type = PropertyType[json_property['type']]
             self.dimensions = json_property['dimensions']
             self.values = json_property['values']
+            self.classes = json_property['classes']
         else:
             self.property_id = property_id
             self.name = name
@@ -73,6 +75,7 @@ class Property:
             self.property_type = property_type
             self.dimensions = dimensions
             self.values = values
+            self.classes = classes
 
     def to_json(self):
         p = {}
@@ -88,6 +91,8 @@ class Property:
             p["dimensions"] = self.dimensions
         if self.values is not None and len(self.values) > 0:
             p["values"] = self.values
+        if self.classes is not None and len(self.classes) > 0:
+            p["classes"] = self.classes
         return p
 
     def value_to_json(self):
@@ -169,6 +174,9 @@ class Property:
         prop3.values = [a+b for a,b in zip(self.values, values2_no_ts)]
 
         return prop3
+
+    def create_classes(self, classes):
+        self.entity.create_classes(self, classes)
 
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)

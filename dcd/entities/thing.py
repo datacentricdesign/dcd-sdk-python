@@ -192,6 +192,18 @@ class Thing:
         raise ValueError("Property id '" + property_id + "' not part of Thing '"
                          + self.thing_id + "'. Did you call read_thing() first?")
 
+    def create_classes(self, prop, classes):
+        classes_json = []
+        for clazz in classes:
+            classes_json.append({'name':clazz})
+
+        headers = {'Authorization': 'bearer ' + self.token}
+        uri = self.http_uri + "/things/" + self.thing_id + "/properties"\
+              + prop.property_id + "/classes"
+        response = requests.post(uri, headers=headers, verify=verifyCert,
+                                 json=classes)
+        prop.classes = classes_json
+
 
     """----------------------------------------------------------------------------
         Search for a property in thing by name, create it if not found & return it
