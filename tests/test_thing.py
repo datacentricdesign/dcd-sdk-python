@@ -1,5 +1,4 @@
 from dcd.entities.thing import Thing
-from dcd.services.things import ThingService
 
 import unittest
 

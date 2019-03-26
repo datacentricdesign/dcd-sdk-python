@@ -1,16 +1,14 @@
 
 from threading import Thread
-from dcd.entities.property import Property, PropertyType 
+from dcd.entities.property import Property, PropertyType
 from dcd.helpers.mqtt import mqtt_result_code
-from dotenv import load_dotenv 
-import paho.mqtt.client as mqtt 
+from dcd.helpers.video import VideoRecorder
+from dotenv import load_dotenv
+import paho.mqtt.client as mqtt
 import requests
 import json
 import logging
 import os
-import asyncio
-import time
-import math
 
 
 requests.packages.urllib3.disable_warnings()
@@ -22,7 +20,7 @@ MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
 MQTT_PORT = os.getenv('MQTT_PORT', 8883)
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl/api')
 
-logging.basicConfig(level=logging.DEBUG) 
+logging.basicConfig(level=logging.DEBUG)
 
 def generate_token(private_key_path):
     # Read key from file
@@ -43,9 +41,11 @@ def generate_token(private_key_path):
 class ThingCredentials:
 
     #  constructor
-    def __init__(self, THING_ID, THING_TOKEN):
+    def __init__(self, THING_ID, THING_TOKEN, api_url="https://dwd.tudelft.nl/api"):
         self.THING_TOKEN = THING_TOKEN
         self.THING_ID = THING_ID
+        self.api_url = api_url
+
 
 class Thing:
     """"A DCD 'Thing' represents a physical or virtual entity collecting data."""
@@ -86,6 +86,8 @@ class Thing:
         self.mqtt_connected = False
 
         self.logger = logging.getLogger(self.thing_id or "Thing")
+
+        self.video_recorder = None
 
         if self.thing_id is not None:
             self.http_uri = HTTP_URI
@@ -155,12 +157,16 @@ class Thing:
         self.properties[created_property.property_id] = created_property
         return created_property
 
-    def update_property(self, prop):
-        topic = "/things/" + self.thing_id + "/properties/" + prop.property_id
-        if self.mqtt_connected:
+    def update_property(self, prop, file_name=None):
+        if file_name is None and self.mqtt_connected:
+            topic = "/things/" + self.thing_id\
+                    + "/properties/" + prop.property_id
             self.logger.debug('Updating property ' + prop.property_id)
             self.mqtt_client.publish(topic,
                                      json.dumps(prop.value_to_json()))
+        else:
+            self.update_property_http(prop, file_name=file_name)
+
 
     def read_property(self, property_id, from_ts=None, to_ts=None):
         prop = self.properties[property_id]
@@ -183,14 +189,26 @@ class Thing:
                 return prop
             raise ValueError(
                 "read_property() - unknown response: " + json_result)
-        raise ValueError("Property id '" + property_id + "' not part of Thing '" 
+        raise ValueError("Property id '" + property_id + "' not part of Thing '"
                          + self.thing_id + "'. Did you call read_thing() first?")
+
+    def create_classes(self, prop, classes):
+        classes_json = []
+        for clazz in classes:
+            classes_json.append({'name':clazz})
+
+        headers = {'Authorization': 'bearer ' + self.token}
+        uri = self.http_uri + "/things/" + self.thing_id + "/properties"\
+              + prop.property_id + "/classes"
+        response = requests.post(uri, headers=headers, verify=verifyCert,
+                                 json=classes)
+        prop.classes = classes_json
 
 
     """----------------------------------------------------------------------------
         Search for a property in thing by name, create it if not found & return it
-    ----------------------------------------------------------------------------""" 
-    def find_or_create_property(self, property_name, property_type): 
+    ----------------------------------------------------------------------------"""
+    def find_or_create_property(self, property_name, property_type):
 
         if self.find_property_by_name(property_name) is None: #  property not found
             self.create_property(name=property_name,
@@ -198,69 +216,78 @@ class Thing:
 
         return self.find_property_by_name(property_name)
 
-   
+
     """---------------------------------------------------------------------------- 
         Recording video function, will find or create video property in current 
-        thing, with default property name "Wheelchair Webcam", and thing 
-        credentials in ThingCredentials class wrapper
+        thing, with default property name "WebCam", and thing  credentials in
+        ThingCredentials class wrapper
     ----------------------------------------------------------------------------"""
-    def record_video(self, credentials, current_video_file = None,
-                     current_video_start_ts = None, property_name="Wheelchair Webcam"):   
-
+    def start_video_recording(self,
+                              property_name='WebCam',
+                              port='/dev/video0',
+                              segment_size='30'):
 
         #  Finding or creating our video property
-        property = self.find_or_create_property(property_name, PropertyType.VIDEO) 
+        video_property = self.find_or_create_property(property_name,
+                                                      PropertyType.VIDEO)
 
-        loop = asyncio.get_event_loop()
+        self.video_recorder = VideoRecorder(video_property, port, segment_size)
+        self.logger.info('Start video recording on property ' + video_property.property_id)
 
-        #  This should be removed to  another module, but not currently
-        class SubprocessProtocol(asyncio.SubprocessProtocol): 
 
-            #  redefining variables so they exist within the protocol class
-            def __init__(self, current_video_file, current_video_start_ts):
-                self.current_video_file = current_video_file
-                self.current_video_start_ts = current_video_start_ts
+        self.video_recorder.start_recording()
 
-            def pipe_data_received(self, fd, data):
-                # if avconv is opening a new file, there is one ready to send
-                line = str(data)
-                if "Opening" in line:
-                    new_time = math.floor(time.time() * 1000)
-                    new_file = line.split("'")[1]
-                    print(new_file)
+    def stop_video_recording(self):
+        if self.video_recorder is not None:
+            self.video_recorder.stop_recording()
 
-                    if current_video_file is not None:
-                        thread = Thread(target=property.upload_file,
-                                        args=(self.current_video_file,
-                                              'video',
-                                              {'start_ts': self.current_video_start_ts,
-                                               'duration': new_time - self.current_video_start_ts},
-                                              credentials
-                                              ) 
-                                        ) 
-                        thread.start()
-                    self.current_video_start_ts = new_time
-                    self.current_video_file = new_file
 
-            def connection_lost(self, exc):
-                loop.stop()  # end loop.run_forever()
+    """----------------------------------------------------------------------------
+        Uploads file to the property given filename, data(list of values
+        for the property that will receive it)  an authentification class auth, 
+        which contains the thing ID and token, and url (by default gets 
+        reconstructed automatically)
 
-        try:
-            loop.run_until_complete(loop.subprocess_exec(SubprocessProtocol(current_video_file,
-                                                                            current_video_start_ts),
-                                                         "avconv",
-                                                         "-f", "video4linux2",
-                                                         "-i", "/dev/video0",
-                                                         "-map", "0",
-                                                         "-f", "segment",
-                                                         "-segment_time", "30",
-                                                         "-segment_format", "mp4",
-                                                         "capture-%03d.mp4"))
+        FOR VIDEO:
+        data dictionary  must have following pairs  start_ts & duration defined
+        like so : {'start_ts': ... , 'duration': ...}
+    ----------------------------------------------------------------------------"""
+    def update_property_http(self, prop, file_name=None):
+        files=None
 
-            loop.run_forever()
-        finally:
-            print("Closing recording process.")
-            loop.close()
+        if file_name is not None:
+            self.logger.debug('Uploading ' + file_name
+                              + ' to property ' + self.name)
+            if file_name.endswith('.mp4'):
+                #  Uploading file of type video in files,
+                #  we create a dictionary that maps 'video' to a tuple
+                #  (read only list) composed of extra data : name, file object
+                #  type of video (mp4 by default), and expiration tag (also a dict)(?)
+                files = {'video': ( file_name, open('./' + file_name, 'rb'),
+                                    'video/mp4' , {'Expires': '0'} ) }
+            else:
+                self.logger.error('File type not yet supported,'
+                                  + 'cancelling property update over HTTP')
+                return -1
+
+        headers = {
+            'Authorization': 'bearer ' + self.token
+        }
+        #  creating our video url for upload
+        values = ','.join(map(str, prop.values[0]))
+        url = self.http_uri + '/things/' + self.thing_id\
+              + '/properties/' + prop.property_id + '/values/' + values + '/file'
+
+        self.logger.debug(prop.to_json())
+        #  sending our post method to upload this file, using our authentication
+        #  data dict is converted into a list for all the values of the property
+        response = requests.post(url=url,
+                                files=files,
+                                headers=headers)
+
+        self.logger.debug(response.status_code)
+        #  method, by the requests library
+        return response.status_code
 
 
     def init_mqtt(self):
