@@ -2,7 +2,7 @@
 # with the DCD HUB using the credentials of a thing.
 
 # This is a typical case for a Python code running 
-# on a device to collect data.
+# on a device to collect data. 
 
 from random import random
 import time

@@ -106,7 +106,7 @@ class Property:
         self.subscribers.append(uri)
 
     """----------------------------------------------------------------------------
-        Uploads file to the property given filename, file type,  data(list of values
+        Uploads file to the property given filename, file type,  data(list of values 
         for the property that will receive it)  an authentification class auth, 
         which contains the thing ID and token, and url (by default gets 
         reconstructed automatically)

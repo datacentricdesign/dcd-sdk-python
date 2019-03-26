@@ -1,7 +1,7 @@
 # This example shows how to establish a connection 
 # with the DCD HUB using the credentials of a thing.
 
-# This is a typical case for a Python code running
+# This is a typical case for a Python code running 
 # on a device to collect data.
 
 import time
