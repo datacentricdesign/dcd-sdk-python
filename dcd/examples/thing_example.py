@@ -29,24 +29,11 @@ my_thing.read()
 # print(my_thing.to_json())
 
 # If we have no properties, let's create a random one
-if my_thing.find_property_by_name("My Random Property") is None:
-    # By specifying a property type, the DCD Hub will
-    # automatically generate the property dimensions
-    # (in this case, 3 generic dimensions)
-    my_property = my_thing.create_property(name="My Random Property",
-                                           property_type=PropertyType.THREE_DIMENSIONS)
+my_property = my_thing.find_or_create_property("My Random Property",
+                                               PropertyType.THREE_DIMENSIONS)
 
-    # Let's have a look at the property, it should
-    # contains the name, a unique id and the dimensions
-    print(my_property.to_json())
-
-# Whether you have just created a property or you retrieved it
-# from the DCD Hub (with my_thing.read), you can look for it by name
-# WARNING: if you name two property with the same name, the Hub will
-# create them both, but this function will randomly return the first
-# it finds.
-my_property = my_thing.find_property_by_name("My Random Property")
-
+# Let's have a look at the property, it should
+# contains the name, a unique id and the dimensions
 print(my_property.to_json())
 
 # Let's create a function that generate random values
