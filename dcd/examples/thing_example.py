@@ -42,11 +42,9 @@ def generate_dum_property_values(the_property):
     values = (random(), random(), random())
     # Update the values of the property
     the_property.update_values(values)
-    # Have a 2-second break
-    time.sleep(2)
-    # Then call the same function again to generate new values
-    generate_dum_property_values(the_property)
-
 
 # Finally, we call our function to start generating dum values
-generate_dum_property_values(my_property)
+while True:
+    generate_dum_property_values(my_property)
+    # Have a 2-second break
+    time.sleep(2)
