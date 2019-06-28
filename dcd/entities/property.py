@@ -126,6 +126,11 @@ class Property:
         self.entity.update_property(self, file_name)
 
     def read(self, from_ts=None, to_ts=None):
+        DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+        if type(from_ts) is "string":
+            from_ts = datetime.timestamp(datetime.strptime(from_ts, DATE_FORMAT)) * 1000
+        if type(to_ts) is "string":
+            to_ts = datetime.timestamp(datetime.strptime(to_ts, DATE_FORMAT)) * 1000
         self.entity.read_property(self.property_id, from_ts, to_ts)
 
     def subscribe(self, uri):

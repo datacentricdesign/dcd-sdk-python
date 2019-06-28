@@ -197,11 +197,12 @@ class Thing:
         for clazz in classes:
             classes_json.append({'name':clazz})
 
+        json_to_send = {"classes": classes_json}
         headers = {'Authorization': 'bearer ' + self.token}
-        uri = self.http_uri + "/things/" + self.thing_id + "/properties"\
+        uri = self.http_uri + "/things/" + self.thing_id + "/properties/"\
               + prop.property_id + "/classes"
         response = requests.post(uri, headers=headers, verify=verifyCert,
-                                 json=classes)
+                                 json=json_to_send)
         prop.classes = classes_json
 
 
