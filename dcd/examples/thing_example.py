@@ -29,7 +29,7 @@ my_thing.read()
 # print(my_thing.to_json())
 
 # If we have no properties, let's create a random one
-my_property = my_thing.find_or_create_property("My Random Property",
+my_property = my_thing.find_or_create_property("My Random Property 18",
                                                PropertyType.THREE_DIMENSIONS)
 
 # Let's have a look at the property, it should

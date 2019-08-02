@@ -2,7 +2,7 @@
 from threading import Thread
 from dcd.entities.property import Property, PropertyType
 from dcd.helpers.mqtt import mqtt_result_code
-from dcd.helpers.video import VideoRecorder
+# from dcd.helpers.video import VideoRecorder
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 import requests
@@ -131,8 +131,10 @@ class Thing:
             self.name = json_thing["name"]
             self.description = json_thing["description"]
             self.thing_type = json_thing["type"]
-            self.registered_at = json_thing["registered_at"]
-            self.unregistered_at = json_thing["unregistered_at"]
+
+#             self.registered_at = json_thing["registered_at"]
+#             self.unregistered_at = json_thing["unregistered_at"]
+
             self.properties = {}
 
             for json_property in json_thing["properties"]:
