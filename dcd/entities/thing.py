@@ -82,6 +82,9 @@ class Thing:
             self.properties.extend(properties)
             self.private_key_path = private_key_path
 
+            self.registered_at = None
+            self.unregistered_at = None
+
         self.mqtt_client = None
         self.mqtt_connected = False
 
