@@ -41,6 +41,7 @@ class PropertyType(Enum):
     STATE = "STATE"
     VIDEO = "VIDEO"
     CLASS = "CLASS"
+    TEXT = "TEXT"
 
 
 class Property:
