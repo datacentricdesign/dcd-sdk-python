@@ -40,6 +40,8 @@ class PropertyType(Enum):
     TEMPERATURE = "TEMPERATURE"
     STATE = "STATE"
     VIDEO = "VIDEO"
+    AUDIO = "AUDIO"
+    PICTURE = "PICTURE"
     CLASS = "CLASS"
     TEXT = "TEXT"
 

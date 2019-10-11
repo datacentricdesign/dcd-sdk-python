@@ -9,6 +9,15 @@ import requests
 import json
 import logging
 import os
+import ssl
+
+import datetime
+
+from jwt import (
+    JWT,
+    jwk_from_dict,
+    jwk_from_pem,
+)
 
 requests.packages.urllib3.disable_warnings()
 
@@ -20,6 +29,8 @@ MQTT_PORT = os.getenv('MQTT_PORT', 8883)
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl/api')
 
 logging.basicConfig(level=logging.DEBUG)
+
+# def generate_public_private_keys():
 
 
 def generate_token(private_key_path):
@@ -33,8 +44,22 @@ def generate_token(private_key_path):
     # private_key = jwk.JWK.from_pem(priv_pem)
     # return jwt.generate_jwt(payload, private_key, 'RS256',
     #                         datetime.timedelta(minutes=5))
-    return ""
 
+    current_time = datetime.datetime.utcnow().timestamp()
+
+    message = {
+        'iss': 'https://dwd.tudelft.nl:443/api',
+        'aud': 'https://dwd.tudelft.nl:443/api',
+        'sub': 'dcd:things:my-test-thing-365a',
+        'iat': int(current_time),
+        'exp': int(current_time + 36000)
+    }
+
+    with open('private.pem', 'rb') as fh:
+        signing_key = jwk_from_pem(fh.read())
+
+    jwt = JWT()
+    return jwt.encode(message, signing_key, 'RS256')
 
 """----------------------------------------------------------------------------
     Convenience class, packs id and token of a thing in standard format
@@ -131,6 +156,7 @@ class Thing:
         headers = {'Authorization': 'bearer ' + self.token}
         json_result = requests.get(uri, headers=headers,
                                    verify=verifyCert).json()
+        print(json_result)
         if json_result["thing"] is not None:
             json_thing = json_result["thing"]
             self.name = json_thing["name"]
@@ -270,7 +296,7 @@ class Thing:
                 #  (read only list) composed of extra data : name, file object
                 #  type of video (mp4 by default),
                 #  and expiration tag (also a dict)(?)
-                files = {'video': ( file_name, open('./' + file_name, 'rb'),
+                files = {'data': ( file_name, open('./' + file_name, 'rb'),
                                     'video/mp4' , {'Expires': '0'} ) }
             else:
                 self.logger.error('File type not yet supported,'
@@ -283,12 +309,12 @@ class Thing:
         #  creating our video url for upload
         values = ','.join(map(str, prop.values[0]))
         url = self.http_uri + '/things/' + self.thing_id\
-            + '/properties/' + prop.property_id + '/values/' + values + '/file'
+            + '/properties/' + prop.property_id + '/values/' + values
 
         self.logger.debug(prop.to_json())
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
-        response = requests.post(url=url, files=files, headers=headers)
+        response = requests.put(url=url, files=files, headers=headers)
 
         self.logger.debug(response.status_code)
         #  method, by the requests library
@@ -302,11 +328,17 @@ class Thing:
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
 
+
         # self.mqtt_client.on_subscribe = self.on_mqtt_subscribe
         # mqtt.on_publish = on_publish
         # mqtt.on_disconnect = on_disconnect
         # mqtt.on_log = on_log
 
+        self.mqtt_client.tls_set(
+            "DigiCertCA.crt", cert_reqs=ssl.CERT_NONE,
+            tls_version=ssl.PROTOCOL_TLSv1_2)
+
+        self.mqtt_client.tls_insecure_set(True)
         self.mqtt_client.username_pw_set(username=self.thing_id,
                                          password=self.token)
         self.mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
