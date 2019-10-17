@@ -2,6 +2,9 @@
 from threading import Thread
 from dcd.entities.property import Property, PropertyType
 from dcd.helpers.mqtt import mqtt_result_code
+from dcd.helpers.mqtt import check_digi_cert_ca
+
+
 # from dcd.helpers.video import VideoRecorder
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
@@ -334,6 +337,7 @@ class Thing:
         # mqtt.on_disconnect = on_disconnect
         # mqtt.on_log = on_log
 
+        check_digi_cert_ca()
         self.mqtt_client.tls_set(
             "DigiCertCA.crt", cert_reqs=ssl.CERT_NONE,
             tls_version=ssl.PROTOCOL_TLSv1_2)
