@@ -131,8 +131,7 @@ class Thing:
 
             self.thread_mqtt = Thread(target=self.init_mqtt)
             self.thread_mqtt.start()
-
-        self.read()
+            self.read()
 
     def to_json(self):
         t = {}
