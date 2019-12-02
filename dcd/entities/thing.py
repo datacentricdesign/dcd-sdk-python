@@ -132,6 +132,8 @@ class Thing:
             self.thread_mqtt = Thread(target=self.init_mqtt)
             self.thread_mqtt.start()
 
+        self.read()
+
     def to_json(self):
         t = {}
         if self.thing_id is not None:
@@ -287,7 +289,7 @@ class Thing:
         data dictionary  must have following pairs  start_ts & duration defined
         like so : {'start_ts': ... , 'duration': ...}
     -------------------------------------------------------------------------"""
-    def update_property_http(self, prop, file_name=None):
+    def update_property_http(self, prop, file_name=None): 
         files=None
 
         if file_name is not None:
