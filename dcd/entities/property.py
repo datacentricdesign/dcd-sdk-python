@@ -53,8 +53,8 @@ class Property:
                  property_id=None,
                  name=None,
                  description=None,
-                 property_type=None,
-                 dimensions=(),
+                 typeId=None,
+                 propertyType=None,
                  json_property=None,
                  values=(),
                  classes=None,
@@ -67,16 +67,25 @@ class Property:
             self.property_id = json_property['id']
             self.name = json_property['name']
             self.description = json_property['description']
-            self.property_type = PropertyType[json_property['type']]
-            self.dimensions = json_property['dimensions']
-            self.values = json_property['values']
-            self.classes = json_property['classes']
+            if 'type' in json_property:
+                self.type = json_property['type']
+                self.typeId = PropertyType[self.type["id"]]
+            elif json_property['typeId'] is not None:
+                self.typeId = PropertyType[json_property['typeId']]
+            if 'values' in json_property:
+                self.values = json_property['values']
+            else:
+                self.values = []
+            if 'classes' in json_property:
+                self.classes = json_property['classes']
+            else:
+                self.classes = []
         else:
             self.property_id = property_id
             self.name = name
             self.description = description
-            self.property_type = property_type
-            self.dimensions = dimensions
+            self.typeId = typeId
+            self.type = propertyType
             self.values = values
             self.classes = classes
 
@@ -88,10 +97,8 @@ class Property:
             p["name"] = self.name
         if self.description is not None:
             p["description"] = self.description
-        if self.property_type is not None:
-            p["type"] = self.property_type.name
-        if self.dimensions is not None and len(self.dimensions) > 0:
-            p["dimensions"] = self.dimensions
+        if self.typeId is not None:
+            p["typeId"] = self.typeId.name
         if self.values is not None and len(self.values) > 0:
             p["values"] = self.values
         if self.classes is not None and len(self.classes) > 0:
@@ -123,7 +130,7 @@ class Property:
         self.values = []
         self.values.append(values_with_ts)
 
-        if self.property_type == PropertyType.VIDEO and file_name is None:
+        if self.typeId == PropertyType.VIDEO and file_name is None:
             raise ValueError('Missing file name for VIDEO property update.')
 
         self.entity.update_property(self, file_name)

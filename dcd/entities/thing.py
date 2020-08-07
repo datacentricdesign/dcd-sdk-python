@@ -3,6 +3,7 @@ from threading import Thread
 from dcd.entities.property import Property, PropertyType
 from dcd.helpers.mqtt import mqtt_result_code
 from dcd.helpers.mqtt import check_digi_cert_ca
+from dcd.helpers.token import generate_jwt
 
 
 # from dcd.helpers.video import VideoRecorder
@@ -14,55 +15,22 @@ import logging
 import os
 import ssl
 
-import datetime
-
-from jwt import (
-    JWT,
-    jwk_from_dict,
-    jwk_from_pem,
-)
 
 requests.packages.urllib3.disable_warnings()
 
 verifyCert = True
 
 load_dotenv()
-MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
-MQTT_PORT = os.getenv('MQTT_PORT', 8883)
-HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl/api')
+MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
+MQTT_PORT = os.getenv('MQTT_PORT', 1883)
+HTTP_URI = os.getenv('HTTP_URI', 'http://localhost:8080')
 
 logging.basicConfig(level=logging.DEBUG)
 
 # def generate_public_private_keys():
 
 
-def generate_token(private_key_path):
-    # Read key from file
-    # priv_pem = open(private_key_path, 'r').read()
-    # payload = {
-    #     'iat': datetime.datetime.utcnow(),
-    #     'exp': datetime.timedelta(minutes=5),
-    #     'aud': self.http_uri
-    # }
-    # private_key = jwk.JWK.from_pem(priv_pem)
-    # return jwt.generate_jwt(payload, private_key, 'RS256',
-    #                         datetime.timedelta(minutes=5))
 
-    current_time = datetime.datetime.utcnow().timestamp()
-
-    message = {
-        'iss': 'https://dwd.tudelft.nl:443/api',
-        'aud': 'https://dwd.tudelft.nl:443/api',
-        'sub': 'dcd:things:my-test-thing-365a',
-        'iat': int(current_time),
-        'exp': int(current_time + 36000)
-    }
-
-    with open('private.pem', 'rb') as fh:
-        signing_key = jwk_from_pem(fh.read())
-
-    jwt = JWT()
-    return jwt.encode(message, signing_key, 'RS256')
 
 """----------------------------------------------------------------------------
     Convenience class, packs id and token of a thing in standard format
@@ -87,7 +55,7 @@ class Thing:
                  thing_type=None,
                  properties=(),
                  json_thing=None,
-                 private_key_path=None,
+                 private_key_path='private.pem',
                  token=None):
 
         self.properties = []
@@ -102,8 +70,8 @@ class Thing:
                 prop.belongs_to(self)
                 self.properties[prop.property_id] = prop
 
-            self.registered_at = json_thing.registered_at
-            self.unregistered_at = json_thing.unegistered_at
+            self.createdAt = json_thing.createdAt
+            self.updatedAt = json_thing.updatedAt
         else:
             self.thing_id = thing_id
             self.name = name
@@ -112,8 +80,8 @@ class Thing:
             self.properties.extend(properties)
             self.private_key_path = private_key_path
 
-            self.registered_at = None
-            self.unregistered_at = None
+            self.createdAt = None
+            self.updatedAt = None
 
         self.mqtt_client = None
         self.mqtt_connected = False
@@ -127,7 +95,7 @@ class Thing:
             if token is not None:
                 self.token = token
             else:
-                self.token = generate_token(private_key_path)
+                self.token = generate_jwt(private_key_path, self.thing_id, HTTP_URI, HTTP_URI)
 
             self.thread_mqtt = Thread(target=self.init_mqtt)
             self.thread_mqtt.start()
@@ -149,26 +117,25 @@ class Thing:
             for index, prop in self.properties.items():
                 t["properties"].append(prop.to_json())
 
-        if self.registered_at is not None:
-            t["registered_at"] = self.registered_at
-        if self.unregistered_at is not None:
-            t["unregistered_at"] = self.registered_at
+        if self.createdAt is not None:
+            t["createdAt"] = self.createdAt
+        if self.updatedAt is not None:
+            t["updatedAt"] = self.updatedAt
         return t
 
     def read(self):
         uri = self.http_uri + "/things/" + self.thing_id
         headers = {'Authorization': 'bearer ' + self.token}
-        json_result = requests.get(uri, headers=headers,
+        json_thing = requests.get(uri, headers=headers,
                                    verify=verifyCert).json()
-        print(json_result)
-        if json_result["thing"] is not None:
-            json_thing = json_result["thing"]
+        print(json_thing)
+        if json_thing is not None:
             self.name = json_thing["name"]
             self.description = json_thing["description"]
             self.thing_type = json_thing["type"]
 
-#             self.registered_at = json_thing["registered_at"]
-#             self.unregistered_at = json_thing["unregistered_at"]
+            self.createdAt = json_thing["createdAt"]
+            self.updatedAt = json_thing["updatedAt"]
 
             self.properties = {}
 
@@ -182,13 +149,14 @@ class Thing:
             if prop.name == property_name_to_find:
                 return prop
 
-    def create_property(self, name, property_type):
+    def create_property(self, name, typeId):
         my_property = Property(name=name,
-                               property_type=property_type)
+                               typeId=typeId)
         headers = {'Authorization': 'bearer ' + self.token}
         uri = self.http_uri + "/things/" + self.thing_id + "/properties"
         response = requests.post(uri, headers=headers, verify=verifyCert,
                                  json=my_property.to_json())
+        print(response.json())
         created_property = Property(json_property=response.json()['property'])
         created_property.belongs_to(self)
         self.properties[created_property.property_id] = created_property
@@ -246,11 +214,11 @@ class Thing:
         Search for a property in thing by name,
         create it if not found & return it
     -------------------------------------------------------------------------"""
-    def find_or_create_property(self, property_name, property_type):
+    def find_or_create_property(self, property_name, typeId):
 
         if self.find_property_by_name(property_name) is None: #  property not found
             self.create_property(name=property_name,
-                                 property_type=property_type)
+                                 typeId=typeId)
 
         return self.find_property_by_name(property_name)
 
@@ -310,15 +278,16 @@ class Thing:
         headers = {
             'Authorization': 'bearer ' + self.token
         }
-        #  creating our video url for upload
-        values = ','.join(map(str, prop.values[0]))
-        url = self.http_uri + '/things/' + self.thing_id\
-            + '/properties/' + prop.property_id + '/values/' + values
+        jsonValues = {
+            "values": prop.values
+        }
+
+        url = self.http_uri + '/things/' + self.thing_id + '/properties/' + prop.property_id
 
         self.logger.debug(prop.to_json())
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
-        response = requests.put(url=url, files=files, headers=headers)
+        response = requests.put(url=url, files=files, json=jsonValues, headers=headers)
 
         self.logger.debug(response.status_code)
         #  method, by the requests library
