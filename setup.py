@@ -8,7 +8,7 @@ with open('LICENSE') as f:
 
 setup(
     name='dcd-sdk',
-    version='0.1.1',
+    version='0.1.2',
     author='Data-Centric Design Lab',
     author_email='lab@datacentricdesign.org',
     description='Python SDK for the tools of the Data-Centric Design Lab',
@@ -28,7 +28,7 @@ setup(
     install_requires=[
         'markdown',
         'requests',
-        'python-jwt',
+        'jwt',
         'python-dotenv',
         'asyncio',
         'paho-mqtt',

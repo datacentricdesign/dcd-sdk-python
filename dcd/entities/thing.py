@@ -4,8 +4,6 @@ from dcd.entities.property import Property
 from dcd.helpers.mqtt import mqtt_result_code
 from dcd.helpers.mqtt import check_digi_cert_ca
 from dcd.helpers.token import generate_jwt
-
-
 # from dcd.helpers.video import VideoRecorder
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
@@ -14,6 +12,24 @@ import json
 import logging
 import os
 import ssl
+import sys
+import signal
+
+mqtt_client = None
+
+def keyboardInterruptHandler(signal, frame):
+    print("")
+    logging.info("Disconnecting...")
+    global mqtt_client
+    if (mqtt_client is not None):
+        mqtt_client.disconnect()
+    try:
+        sys.exit(0)
+    except:
+        logging.info('Program closed with CTRL+C')
+        os._exit(0)
+
+signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
 
 requests.packages.urllib3.disable_warnings()
@@ -24,9 +40,6 @@ load_dotenv()
 MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
 MQTT_PORT = os.getenv('MQTT_PORT', 8883)
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
-
-logging.basicConfig(level=logging.DEBUG)
-
 
 """----------------------------------------------------------------------------
     Convenience class, packs id and token of a thing in standard format
@@ -52,8 +65,10 @@ class Thing:
                  properties=(),
                  json_thing=None,
                  private_key_path='private.pem',
-                 token=None):
+                 token=None,
+                 log_level='DEBUG'):
 
+        self.set_log_level(log_level)
         self.properties = []
         if json_thing is not None:
             self.thing_id = json_thing.id
@@ -80,6 +95,7 @@ class Thing:
             self.updatedAt = None
 
         self.mqtt_client = None
+        self.http_connected = False
         self.mqtt_connected = False
 
         self.logger = logging.getLogger(self.thing_id or "Thing")
@@ -93,11 +109,21 @@ class Thing:
             else:
                 self.token = generate_jwt(private_key_path, self.thing_id, HTTP_URI, HTTP_URI)
 
-            # Start the MQTT connection
-            self.thread_mqtt = Thread(target=self.init_mqtt)
-            self.thread_mqtt.start()
             # Loads all thing's details
-            self.read()
+            success = self.read()
+            if success:
+                self.http_connected = True
+                self.logger.info("HTTP connection successful")
+                # Start the MQTT connection
+                self.thread_mqtt = Thread(target=self.init_mqtt)
+                self.thread_mqtt.start()
+
+    def set_log_level(self, log_level):
+        if log_level == 'INFO': logging.basicConfig(level=logging.INFO)
+        elif log_level == 'ERROR': logging.basicConfig(level=logging.ERROR)
+        elif log_level == 'WARNING': logging.basicConfig(level=logging.WARNING)
+        elif log_level == 'DEBUG': logging.basicConfig(level=logging.DEBUG)
+        else: logging.error('Unknown log level ' + log_level)
 
     def to_json(self):
         t = {}
@@ -111,7 +137,7 @@ class Thing:
             t["type"] = self.thing_type
 
         t["properties"] = []
-        if self.properties is not None:
+        if self.properties is not None and len(self.properties)>0:
             for index, prop in self.properties.items():
                 t["properties"].append(prop.to_json())
 
@@ -126,26 +152,32 @@ class Thing:
         headers = {'Authorization': 'bearer ' + self.token}
         json_thing = requests.get(uri, headers=headers,
                                    verify=verifyCert).json()
-        print(json_thing)
         if json_thing is not None:
-            self.name = json_thing["name"]
-            self.description = json_thing["description"]
-            self.thing_type = json_thing["type"]
+            if "message" in json_thing:
+                self.logger.error(json_thing)
+            else:
+                self.name = json_thing["name"]
+                self.description = json_thing["description"]
+                self.thing_type = json_thing["type"]
 
-            self.createdAt = json_thing["createdAt"]
-            self.updatedAt = json_thing["updatedAt"]
+                self.createdAt = json_thing["createdAt"]
+                self.updatedAt = json_thing["updatedAt"]
 
-            self.properties = {}
+                self.properties = {}
 
-            for json_property in json_thing["properties"]:
-                prop = Property(json_property=json_property)
-                prop.belongs_to(self)
-                self.properties[prop.property_id] = prop
+                for json_property in json_thing["properties"]:
+                    prop = Property(json_property=json_property)
+                    prop.belongs_to(self)
+                    self.properties[prop.property_id] = prop
+                return True
+        return False
 
     def find_property_by_name(self, property_name_to_find):
-        for index, prop in self.properties.items():
-            if prop.name == property_name_to_find:
-                return prop
+        if self.properties is not None and len(self.properties)>0:
+            for index, prop in self.properties.items():
+                if prop.name == property_name_to_find:
+                    return prop
+        self.logger.debug("Property " + property_name_to_find + " was not found.")
 
     def create_property(self, name, typeId):
         my_property = Property(name=name,
@@ -154,11 +186,14 @@ class Thing:
         uri = self.http_uri + "/things/" + self.thing_id + "/properties"
         response = requests.post(uri, headers=headers, verify=verifyCert,
                                  json=my_property.to_json())
-        print(response.json())
-        created_property = Property(json_property=response.json())
-        created_property.belongs_to(self)
-        self.properties[created_property.property_id] = created_property
-        return created_property
+        if "message" in response.json():
+            self.logger.error(response.json())
+            return None
+        else:
+            created_property = Property(json_property=response.json())
+            created_property.belongs_to(self)
+            self.properties[created_property.property_id] = created_property
+            return created_property
 
     def update_property(self, prop, file_name=None):
         if file_name is None and self.mqtt_connected:
@@ -184,8 +219,7 @@ class Thing:
             if json_result["property"] is not None:
                 prop.name = json_result['property']['name']
                 prop.description = json_result['property']['description']
-                prop.property_type = PropertyType[
-                    json_result['property']['type']]
+                prop.property_type = json_result['property']['type']
                 prop.dimensions = json_result['property']['dimensions']
                 prop.values = json_result['property']['values']
                 return prop
@@ -231,8 +265,7 @@ class Thing:
                               segment_size='30'):
 
         #  Finding or creating our video property
-        video_property = self.find_or_create_property(property_name,
-                                                      PropertyType.VIDEO)
+        video_property = self.find_or_create_property(property_name, 'VIDEO')
 
         self.video_recorder = VideoRecorder(video_property, port, segment_size)
         self.logger.info('Start video recording on property '
@@ -296,6 +329,8 @@ class Thing:
             'Initialising MQTT connection for Thing \'' + self.thing_id + '\'')
 
         self.mqtt_client = mqtt.Client()
+        global mqtt_client
+        mqtt_client = self.mqtt_client
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
 
