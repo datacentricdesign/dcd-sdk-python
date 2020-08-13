@@ -2,11 +2,7 @@
 
 Python SDK for the tools of the Data-Centric Design Lab
 
-# [Bucket](https://datacentricdesign.org/tools/bucket)
-
-A bucket of data, in the cloud.
-
-![version](https://img.shields.io/badge/version-0.1.2-blue.svg)
+![version](https://img.shields.io/badge/version-0.1.3-blue.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub issues open](https://img.shields.io/github/issues/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
 [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
@@ -139,6 +135,8 @@ while True:
     # Have a 2-second break
     time.sleep(2)
 ```
+
+The full example can be found [here](https://github.com/datacentricdesign/dcd-sdk-python/blob/master/dcd/examples/thing_example.py)
 
 # Thing
 
