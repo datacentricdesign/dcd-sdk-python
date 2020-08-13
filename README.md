@@ -1,12 +1,12 @@
-# dcd-sdk-python
+# [DCD SDK Python](https://datacentricdesign.org/tools/sdk-python/)
 
-A Python SDK to interact with the Data-Centric Design Hub
+Python SDK for the tools of the Data-Centric Design Lab
 
 # [Bucket](https://datacentricdesign.org/tools/bucket)
 
 A bucket of data, in the cloud.
 
-![version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![version](https://img.shields.io/badge/version-0.1.1-blue.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub issues open](https://img.shields.io/github/issues/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
 [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()

@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 import os
 
 from ..entities.thing import Thing
-from ..entities.property import PropertyType
 
 # The thing ID
 load_dotenv()

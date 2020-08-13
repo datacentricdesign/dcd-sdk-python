@@ -1,5 +1,4 @@
 import math
-
 from datetime import datetime
 from enum import Enum
 
@@ -59,7 +58,7 @@ class Property:
         if self.description is not None:
             p["description"] = self.description
         if self.typeId is not None:
-            p["typeId"] = self.typeId.name
+            p["typeId"] = self.typeId
         if self.values is not None and len(self.values) > 0:
             p["values"] = self.values
         if self.classes is not None and len(self.classes) > 0:

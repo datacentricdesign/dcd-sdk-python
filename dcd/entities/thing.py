@@ -1,6 +1,6 @@
 
 from threading import Thread
-from dcd.entities.property import Property, PropertyType
+from dcd.entities.property import Property
 from dcd.helpers.mqtt import mqtt_result_code
 from dcd.helpers.mqtt import check_digi_cert_ca
 from dcd.helpers.token import generate_jwt
