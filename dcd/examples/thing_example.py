@@ -18,7 +18,7 @@ def main():
     THING_ID = os.environ['THING_ID']
 
     # Instantiate a thing with its credential
-    my_thing = Thing(thing_id=THING_ID)
+    my_thing = Thing(thing_id=THING_ID, log_level='INFO')
 
     # If we fail to connect to the Thing, we leave the program
     if not my_thing.http_connected:
@@ -26,7 +26,7 @@ def main():
 
     # If you just registered your Thing on the DCD Hub,
     # it has only an id, a name and a type.
-    print(my_thing.to_json())
+    # print(my_thing.to_json())
 
     # If we have no properties, let's create a random one
     my_property = my_thing.find_or_create_property(
@@ -34,7 +34,7 @@ def main():
 
     # Let's have a look at the property, it should
     # contains the name, a unique id and the dimensions
-    print(my_property.to_json())
+    # print(my_property.to_json())
 
     # Let's create a function that generate random values
     def generate_dum_property_values(the_property):

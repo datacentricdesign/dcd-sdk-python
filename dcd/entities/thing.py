@@ -31,9 +31,6 @@ def keyboardInterruptHandler(signal, frame):
 
 signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
-
-requests.packages.urllib3.disable_warnings()
-
 verifyCert = True
 
 load_dotenv()
@@ -229,19 +226,6 @@ class Thing:
                          + self.thing_id
                          + "'. Did you call read_thing() first?")
 
-    def create_classes(self, prop, classes):
-        classes_json = []
-        for clazz in classes:
-            classes_json.append({'name':clazz})
-
-        json_to_send = {"classes": classes_json}
-        headers = {'Authorization': 'bearer ' + self.token}
-        uri = self.http_uri + "/things/" + self.thing_id + "/properties/"\
-              + prop.property_id + "/classes"
-        response = requests.post(uri, headers=headers, verify=verifyCert,
-                                 json=json_to_send)
-        prop.classes = classes_json
-
     """-------------------------------------------------------------------------
         Search for a property in thing by name,
         create it if not found & return it
@@ -259,23 +243,23 @@ class Thing:
         thing, with default property name "WebCam", and thing  credentials in
         ThingCredentials class wrapper
     -------------------------------------------------------------------------"""
-    def start_video_recording(self,
-                              property_name='WebCam',
-                              port='/dev/video0',
-                              segment_size='30'):
+    # def start_video_recording(self,
+    #                           property_name='WebCam',
+    #                           port='/dev/video0',
+    #                           segment_size='30'):
 
-        #  Finding or creating our video property
-        video_property = self.find_or_create_property(property_name, 'VIDEO')
+    #     #  Finding or creating our video property
+    #     video_property = self.find_or_create_property(property_name, 'VIDEO')
 
-        self.video_recorder = VideoRecorder(video_property, port, segment_size)
-        self.logger.info('Start video recording on property '
-                         + video_property.property_id)
+    #     self.video_recorder = VideoRecorder(video_property, port, segment_size)
+    #     self.logger.info('Start video recording on property '
+    #                      + video_property.property_id)
 
-        self.video_recorder.start_recording()
+    #     self.video_recorder.start_recording()
 
-    def stop_video_recording(self):
-        if self.video_recorder is not None:
-            self.video_recorder.stop_recording()
+    # def stop_video_recording(self):
+    #     if self.video_recorder is not None:
+    #         self.video_recorder.stop_recording()
 
     """-------------------------------------------------------------------------
         Uploads file to the property given filename, data(list of values
@@ -325,8 +309,7 @@ class Thing:
         return response.status_code
 
     def init_mqtt(self):
-        self.logger.info(
-            'Initialising MQTT connection for Thing \'' + self.thing_id + '\'')
+        self.logger.debug('Initialising MQTT connection.')
 
         self.mqtt_client = mqtt.Client()
         global mqtt_client

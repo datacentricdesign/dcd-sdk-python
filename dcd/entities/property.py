@@ -23,8 +23,6 @@ class Property:
         self.subscribers = []
         self.entity = entity
 
-        print(json_property)
-
         if json_property is not None:
             self.property_id = json_property['id']
             self.name = json_property['name']

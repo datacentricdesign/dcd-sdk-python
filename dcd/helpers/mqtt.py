@@ -1,14 +1,14 @@
 import requests
-
+import logging
 
 def mqtt_result_code(rc):
     switcher = {
-        0: "Connection successful",
-        1: "Connection refused - incorrect protocol version",
-        2: "Connection refused - invalid client identifier",
-        3: "Connection refused - server unavailable",
-        4: "Connection refused - bad username or password",
-        5: "Connection refused - not authorised"
+        0: "MQTT connection successful",
+        1: "MQTT Connection refused - incorrect protocol version",
+        2: "MQTT Connection refused - invalid client identifier",
+        3: "MQTT Connection refused - server unavailable",
+        4: "MQTT Connection refused - bad username or password",
+        5: "MQTT Connection refused - not authorised"
     }
     return switcher.get(rc, "Unknown result code: " + str(rc))
 
@@ -16,10 +16,10 @@ def mqtt_result_code(rc):
 def check_digi_cert_ca():
     try:
         f = open("DigiCertCA.crt")
-        print("DigiCertCA.crt exist.")
+        logging.debug("DigiCertCA.crt exist.")
         f.close()
     except IOError:
-        print("DigiCertCA.crt missing, downloading...")
+        logging.debug("DigiCertCA.crt missing, downloading...")
         # Send HTTP GET request to github to fetch the certificate
         response = requests.get("https://raw.githubusercontent.com/datacentricdesign/dcd-hub/develop/certs/DigiCertCA.crt")
         # If the HTTP GET request can be served
@@ -29,6 +29,6 @@ def check_digi_cert_ca():
             with open("DigiCertCA.crt", 'wb') as local_file:
                 for chunk in response.iter_content(chunk_size=128):
                     local_file.write(chunk)
-            print("DigiCertCA.crt downloaded.")
+            logging.debug("DigiCertCA.crt downloaded.")
         else:
-            print("DigiCertCA not found.")
+            logging.warn("DigiCertCA not found.")

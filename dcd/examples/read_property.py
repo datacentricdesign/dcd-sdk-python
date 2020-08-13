@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 import math
 
-from ..entities.thing import Thing
-from ..entities.property import PropertyType
+from dcd.entities.thing import Thing
 
 # The thing ID and access token
 load_dotenv()
