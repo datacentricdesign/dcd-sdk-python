@@ -1,6 +1,6 @@
-# dcd-sdk-python
+# [DCD SDK Python](https://datacentricdesign.org/tools/sdk-python/)
 
-A Python SDK to interact with the Data-Centric Design Hub
+Python SDK for the tools of the Data-Centric Design Lab
 
 # [Bucket](https://datacentricdesign.org/tools/bucket)
 
