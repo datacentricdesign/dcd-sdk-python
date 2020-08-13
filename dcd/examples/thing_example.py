@@ -13,24 +13,23 @@ import os
 from ..entities.thing import Thing
 from ..entities.property import PropertyType
 
-# The thing ID and access token
+# The thing ID
 load_dotenv()
 THING_ID = os.environ['THING_ID']
-THING_TOKEN = os.environ['THING_TOKEN']
 
 # Instantiate a thing with its credential
-my_thing = Thing(thing_id=THING_ID, token=THING_TOKEN)
+my_thing = Thing(thing_id=THING_ID)
 
 # We can fetch the details of our thing
 my_thing.read()
 
 # If you just registered your Thing on the DCD Hub,
 # it has only an id, a name and a type.
-# print(my_thing.to_json())
+print(my_thing.to_json())
 
 # If we have no properties, let's create a random one
-my_property = my_thing.find_or_create_property("My Random Property 18",
-                                               PropertyType.THREE_DIMENSIONS)
+my_property = my_thing.find_or_create_property(
+    "My Python Accelerometer", 'ACCELEROMETER')
 
 # Let's have a look at the property, it should
 # contains the name, a unique id and the dimensions

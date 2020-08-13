@@ -1,5 +1,3 @@
-import json
-
 
 class Person:
     """"A DCD 'Person' represents a physical person."""

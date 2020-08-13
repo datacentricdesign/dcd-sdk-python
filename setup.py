@@ -8,10 +8,10 @@ with open('LICENSE') as f:
 
 setup(
     name='dcd-sdk',
-    version='0.0.16',
-    author='Jacky Bourgeois',
-    author_email='jacky@datacentricdesign.org',
-    description='Data-Centric Design Hub SDK',
+    version='0.1.0',
+    author='Data-Centric Design Lab',
+    author_email='lab@datacentricdesign.org',
+    description='Python SDK for the tools of the Data-Centric Design Lab',
     url='https://github.com/datacentricdesign/dcd-sdk-python',
     license=sdk_license,
     packages=find_packages(exclude=('tests', 'docs')),
@@ -24,5 +24,13 @@ setup(
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-    ]
+    ],
+    install_requires=[
+        'markdown',
+        'requests',
+        'python-jwt',
+        'python-dotenv',
+        'asyncio',
+        'paho-mqtt',
+    ],
 )
