@@ -18,7 +18,7 @@ def main():
     THING_ID = os.environ['THING_ID']
 
     # Instantiate a thing with its credential
-    my_thing = Thing(thing_id=THING_ID, log_level='INFO')
+    my_thing = Thing(thing_id=THING_ID)
 
     # If we fail to connect to the Thing, we leave the program
     if not my_thing.http_connected:
