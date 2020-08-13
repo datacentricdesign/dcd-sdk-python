@@ -28,7 +28,7 @@ setup(
     install_requires=[
         'markdown',
         'requests',
-        'python-jwt',
+        'jwt',
         'python-dotenv',
         'asyncio',
         'paho-mqtt',
