@@ -3,6 +3,119 @@
 A Python SDK to interact with the Data-Centric Design Hub
 
 
+# Get started
+
+* Create a Thing
+
+To interact with bucket, the first step is to visit [Bucket](https://dwd.tudelft.nl/bucket) to create an account and a Thing.
+
+During this process you will get the ID of your Thing (starting with dcd:things:...) and you will generate a public/private key.
+
+These 2 pieces of information are needed for your Python code to interact with Bucket.
+
+* Create a Python project
+
+pipenv
+Install dcd-sdk-python
+
+* Basic example
+
+In this example we will create a property Accelerometer generating random values. It shows how to establish a connection with 
+Bucket using your Thing id and your private key. This is a typical case for a Python code running on a device to collect data. 
+
+```
+# Import Thing from the Data-Centric Design 
+from dcd.entities.thing import Thing
+
+# Create an instance of Thing
+# (Replace with your thing id and the path to your private key)
+my_thing = Thing(thing_id='dcd:things:7f7fe4c6-45e9-42d2-86e2-a6794e386108 ',
+                 private_key_path='~/Desktop/private.pem')
+```
+
+Once the connection is established with your Thing, we can get an overview of
+this Thing by printing the output of the method to_json(). If you just registered
+your Thing on Bucket, it has only an id, a name and a type.
+
+```
+print(my_thing.to_json())
+```
+
+Let's create a property 'My Python accelerometer'. The method find_or_create()
+looks for an existing property with this name. If none is found, it creates a
+new on with the type 'ACCELEROMETER' 
+
+```python
+my_property = my_thing.find_or_create_property(
+    "My Python Accelerometer", 'ACCELEROMETER')
+```
+
+Let's have a look at the property, it should contain the name and a unique id.
+The type also contains the dimensions, 3 in the case of an accelerometer.
+
+```
+print(my_property.to_json())
+```
+
+We are ready to send data. In the code below we create a function that generates
+an array with 3 random values and add them to the property. We then make an infinite
+loop (while True) to send these random values every 2 seconds.
+
+```
+# Let's create a function that generate random values
+def generate_dum_property_values(the_property):
+    # Define a tuple with the current time, and 3 random values
+    values = (random(), random(), random())
+    # Update the values of the property
+    the_property.update_values(values)
+
+# Finally, we call our function to start generating dum values
+while True:
+    generate_dum_property_values(my_property)
+    # Have a 2-second break
+    time.sleep(2)
+```
+
+# Thing
+
+* Thing()
+
+Instantiate a connection to Bucket for a Thing
+
+  * thing_id (required), the id of the Thing to connect
+  * private_key_path (optional), the path to the private key. If no path is provided, it looks for the file 'private.pem' in the current folder.
+
+* thing.read()
+
+Fetch the Thing details from Bucket. This method is automatically called Thing() connection succeed.
+
+* thing.to_json()
+
+Format all Thing details as a JSON object.
+
+* thing.find_property_by_name()
+
+  * property_name_to_find (required) the name of the property we are looking for
+
+* thing.create_property()
+
+  * name (required)
+  * typeId (required)
+
+* thing.update_property()
+  * prop (required)
+  * file_name (optional)
+
+
+* thing.read_property()
+  * property_id (required)
+  * from_ts (optional)
+  * to_ts (optional)
+
+* thing.find_or_create_property()
+  * property_name (required)
+  * typeId (required)
+
 ## Developers
 
 To publish a new version of the SDK:
