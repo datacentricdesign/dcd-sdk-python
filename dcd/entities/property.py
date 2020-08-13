@@ -7,45 +7,6 @@ from enum import Enum
     Class that contains all possible property types for a property in a thing
 ----------------------------------------------------------------------------"""
 
-
-class PropertyType(Enum):
-    ONE_DIMENSION = "1D"
-    TWO_DIMENSIONS = "2D"
-    THREE_DIMENSIONS = "3D"
-    FOUR_DIMENSIONS = "4D"
-    FIVE_DIMENSIONS = "5D"
-    SIX_DIMENSIONS = "6D"
-    SEVEN_DIMENSIONS = "7D"
-    EIGHT_DIMENSIONS = "8D"
-    NINE_DIMENSIONS = "9D"
-    TEN_DIMENSIONS = "10D"
-    ELEVEN_DIMENSIONS = "11D"
-    TWELVE_DIMENSIONS = "12D"
-    ACCELEROMETER = "ACCELEROMETER"
-    GYROSCOPE = "GYROSCOPE"
-    BINARY = "BINARY"
-    MAGNETIC_FIELD = "MAGNETIC_FIELD"
-    GRAVITY = "GRAVITY"
-    ROTATION_VECTOR = "ROTATION_VECTOR"
-    LIGHT = "LIGHT"
-    LOCATION = "LOCATION"
-    ALTITUDE = "ALTITUDE"
-    BEARING = "BEARING"
-    SPEED = "SPEED"
-    PRESSURE = "PRESSURE"
-    PROXIMITY = "PROXIMITY"
-    RELATIVE_HUMIDITY = "RELATIVE_HUMIDITY"
-    COUNT = "COUNT"
-    FORCE = "FORCE"
-    TEMPERATURE = "TEMPERATURE"
-    STATE = "STATE"
-    VIDEO = "VIDEO"
-    AUDIO = "AUDIO"
-    PICTURE = "PICTURE"
-    CLASS = "CLASS"
-    TEXT = "TEXT"
-
-
 class Property:
     """"A DCD 'Property' represents a numerical property of a Thing."""
 
@@ -69,9 +30,9 @@ class Property:
             self.description = json_property['description']
             if 'type' in json_property:
                 self.type = json_property['type']
-                self.typeId = PropertyType[self.type["id"]]
+                self.typeId = self.type["id"]
             elif json_property['typeId'] is not None:
-                self.typeId = PropertyType[json_property['typeId']]
+                self.typeId = json_property['typeId']
             if 'values' in json_property:
                 self.values = json_property['values']
             else:
@@ -130,7 +91,7 @@ class Property:
         self.values = []
         self.values.append(values_with_ts)
 
-        if self.typeId == PropertyType.VIDEO and file_name is None:
+        if self.typeId == 'VIDEO' and file_name is None:
             raise ValueError('Missing file name for VIDEO property update.')
 
         self.entity.update_property(self, file_name)

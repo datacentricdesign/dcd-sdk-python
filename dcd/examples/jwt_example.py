@@ -11,7 +11,7 @@ import os
 load_dotenv()
 THING_ID = os.environ['THING_ID']
 
-API_URL='http://localhost:8080'
+API_URL='https://dwd.tudelft.nl:443/bucket/api'
 
 jwt = generate_jwt('private.pem', THING_ID, API_URL, API_URL)
 

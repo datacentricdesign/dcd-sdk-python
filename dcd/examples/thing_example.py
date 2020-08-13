@@ -25,12 +25,11 @@ my_thing.read()
 
 # If you just registered your Thing on the DCD Hub,
 # it has only an id, a name and a type.
-# print(my_thing.to_json())
+print(my_thing.to_json())
 
 # If we have no properties, let's create a random one
 my_property = my_thing.find_or_create_property(
-    "My Python Accelerometer",
-    PropertyType.ACCELEROMETER)
+    "My Python Accelerometer", 'ACCELEROMETER')
 
 # Let's have a look at the property, it should
 # contains the name, a unique id and the dimensions

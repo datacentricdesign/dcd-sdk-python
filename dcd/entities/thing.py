@@ -21,15 +21,11 @@ requests.packages.urllib3.disable_warnings()
 verifyCert = True
 
 load_dotenv()
-MQTT_HOST = os.getenv('MQTT_HOST', 'localhost')
-MQTT_PORT = os.getenv('MQTT_PORT', 1883)
-HTTP_URI = os.getenv('HTTP_URI', 'http://localhost:8080')
+MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
+MQTT_PORT = os.getenv('MQTT_PORT', 8883)
+HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
 
 logging.basicConfig(level=logging.DEBUG)
-
-# def generate_public_private_keys():
-
-
 
 
 """----------------------------------------------------------------------------
@@ -38,7 +34,7 @@ logging.basicConfig(level=logging.DEBUG)
 class ThingCredentials:
 
     #  constructor
-    def __init__(self, THING_ID, THING_TOKEN, api_url="https://dwd.tudelft.nl/api"):
+    def __init__(self, THING_ID, THING_TOKEN, api_url="https://dwd.tudelft.nl/bucket/api"):
         self.THING_TOKEN = THING_TOKEN
         self.THING_ID = THING_ID
         self.api_url = api_url
@@ -97,8 +93,10 @@ class Thing:
             else:
                 self.token = generate_jwt(private_key_path, self.thing_id, HTTP_URI, HTTP_URI)
 
+            # Start the MQTT connection
             self.thread_mqtt = Thread(target=self.init_mqtt)
             self.thread_mqtt.start()
+            # Loads all thing's details
             self.read()
 
     def to_json(self):
@@ -157,7 +155,7 @@ class Thing:
         response = requests.post(uri, headers=headers, verify=verifyCert,
                                  json=my_property.to_json())
         print(response.json())
-        created_property = Property(json_property=response.json()['property'])
+        created_property = Property(json_property=response.json())
         created_property.belongs_to(self)
         self.properties[created_property.property_id] = created_property
         return created_property
@@ -336,10 +334,20 @@ class Thing:
         # reconnect then subscriptions will be renewed.
 
         # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
+        self.mqtt_client.subscribe([("/things/" + self.thing_id + "/logs", 1)])
 
     """
         The callback for when a PUBLISH message is received from the server.
     """
     def on_mqtt_message(self, client, userdata, msg):
-        self.logger.info("Received message on topic "
-                    + msg.topic + ": " + str(msg.payload))
+        if msg.topic.endswith("/logs"):
+            jsonMsg = json.loads(msg.payload)
+            if jsonMsg['level'] == 'error':
+                self.logger.error("[mqtt-log] " + str(jsonMsg))
+            elif jsonMsg['level'] == 'info':
+                self.logger.info("[mqtt-log] " + str(jsonMsg))
+            elif jsonMsg['level'] == 'debug':
+                self.logger.debug("[mqtt-log] " + str(jsonMsg))
+            
+        else:
+            self.logger.info("[mqtt-log] " + msg.topic + ": " + msg.payload.toString())
