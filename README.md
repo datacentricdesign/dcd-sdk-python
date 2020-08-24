@@ -2,7 +2,7 @@
 
 Python SDK for the tools of the Data-Centric Design Lab
 
-![version](https://img.shields.io/badge/version-0.1.3-blue.svg)
+![version](https://img.shields.io/badge/version-0.1.4-blue.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub issues open](https://img.shields.io/github/issues/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
 [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
@@ -195,4 +195,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2020-08-24
+
 ### Added
+- Automatic generation of property IP_ADDRESS
+
+## [0.1.3] - 2020-08-13
+
+### Added
+- Extended MQTT API
+

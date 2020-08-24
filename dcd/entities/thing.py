@@ -4,6 +4,7 @@ from dcd.entities.property import Property
 from dcd.helpers.mqtt import mqtt_result_code
 from dcd.helpers.mqtt import check_digi_cert_ca
 from dcd.helpers.token import generate_jwt
+from dcd.helpers.network import get_local_ip, get_external_ip, check_type_ip
 # from dcd.helpers.video import VideoRecorder
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
@@ -112,6 +113,7 @@ class Thing:
             success = self.read()
             if success:
                 self.http_connected = True
+                self.update_ip()
                 self.logger.info("HTTP connection successful")
                 # Start the MQTT connection
                 self.thread_mqtt = Thread(target=self.init_mqtt)
@@ -251,6 +253,7 @@ class Thing:
     -------------------------------------------------------------------------"""
     def find_or_create_property(self, property_name, typeId):
         if self.find_property_by_name(property_name) is None: #  property not found
+            print("# # # # # no prop with this name")
             self.create_property(name=property_name,
                                  typeId=typeId)
 
@@ -408,3 +411,15 @@ class Thing:
 
         else:
             self.logger.info("[mqtt-log] " + msg.topic + ": " + msg.payload.toString())
+
+    def update_ip(self):
+        ip_address = self.find_or_create_property('IP Address', 'IP_ADDRESS')
+        local_ip = get_local_ip()
+        type_local_ip = check_type_ip(local_ip)
+        print(local_ip + ' ' + str(type_local_ip))
+        external_ip = get_external_ip()
+        type_external_ip =  check_type_ip(external_ip)
+        print(external_ip + ' ' + str(type_external_ip))
+        values = (local_ip, type_local_ip, external_ip, type_external_ip)
+        ip_address.update_values(values)
+    
