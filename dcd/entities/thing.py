@@ -16,11 +16,11 @@ import ssl
 import sys
 import signal
 import random
+import time
 
 mqtt_client = None
 
 def keyboardInterruptHandler(signal, frame):
-    print("")
     logging.info("Disconnecting...")
     global mqtt_client
     if (mqtt_client is not None):
@@ -40,6 +40,8 @@ MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
 MQTT_PORT = int(os.getenv('MQTT_PORT', '8883'))
 MQTT_SECURED = os.getenv('MQTT_SECURED', 'True') == 'True'
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
+
+LOG_PATH = os.getenv('LOG_PATH', './logs/')
 
 """----------------------------------------------------------------------------
     Convenience class, packs id and token of a thing in standard format
@@ -98,7 +100,7 @@ class Thing:
         self.http_connected = False
         self.mqtt_connected = False
 
-        self.logger = logging.getLogger(self.thing_id or "Thing")
+        self.setup_logger()
 
         self.video_recorder = None
 
@@ -125,6 +127,17 @@ class Thing:
         elif log_level == 'WARNING': logging.basicConfig(level=logging.WARNING)
         elif log_level == 'DEBUG': logging.basicConfig(level=logging.DEBUG)
         else: logging.error('Unknown log level ' + log_level)
+
+    def setup_logger(self):
+        self.logger = logging.getLogger(self.thing_id or "Thing")
+        log_folder = LOG_PATH + '/'+ self.thing_id
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+        fh = logging.FileHandler(log_folder +'/'+ str(time.strftime("%Y-%m-%d_%H")) +'.log')
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
 
     def to_json(self):
         t = {}
@@ -416,10 +429,8 @@ class Thing:
         ip_address = self.find_or_create_property('IP Address', 'IP_ADDRESS')
         local_ip = get_local_ip()
         type_local_ip = check_type_ip(local_ip)
-        print(local_ip + ' ' + str(type_local_ip))
         external_ip = get_external_ip()
         type_external_ip =  check_type_ip(external_ip)
-        print(external_ip + ' ' + str(type_external_ip))
         values = (local_ip, type_local_ip, external_ip, type_external_ip)
         ip_address.update_values(values)
     
