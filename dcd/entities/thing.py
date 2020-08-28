@@ -4,6 +4,7 @@ from dcd.entities.property import Property
 from dcd.helpers.mqtt import mqtt_result_code
 from dcd.helpers.mqtt import check_digi_cert_ca
 from dcd.helpers.token import generate_jwt
+from dcd.helpers.network import get_local_ip, get_external_ip, check_type_ip
 # from dcd.helpers.video import VideoRecorder
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
@@ -14,11 +15,12 @@ import os
 import ssl
 import sys
 import signal
+import random
+import time
 
 mqtt_client = None
 
 def keyboardInterruptHandler(signal, frame):
-    print("")
     logging.info("Disconnecting...")
     global mqtt_client
     if (mqtt_client is not None):
@@ -35,8 +37,11 @@ verifyCert = True
 
 load_dotenv()
 MQTT_HOST = os.getenv('MQTT_HOST', 'dwd.tudelft.nl')
-MQTT_PORT = os.getenv('MQTT_PORT', 8883)
+MQTT_PORT = int(os.getenv('MQTT_PORT', '8883'))
+MQTT_SECURED = os.getenv('MQTT_SECURED', 'True') == 'True'
 HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
+
+LOG_PATH = os.getenv('LOG_PATH', './logs/')
 
 """----------------------------------------------------------------------------
     Convenience class, packs id and token of a thing in standard format
@@ -95,7 +100,7 @@ class Thing:
         self.http_connected = False
         self.mqtt_connected = False
 
-        self.logger = logging.getLogger(self.thing_id or "Thing")
+        self.setup_logger()
 
         self.video_recorder = None
 
@@ -110,6 +115,7 @@ class Thing:
             success = self.read()
             if success:
                 self.http_connected = True
+                self.update_ip()
                 self.logger.info("HTTP connection successful")
                 # Start the MQTT connection
                 self.thread_mqtt = Thread(target=self.init_mqtt)
@@ -121,6 +127,17 @@ class Thing:
         elif log_level == 'WARNING': logging.basicConfig(level=logging.WARNING)
         elif log_level == 'DEBUG': logging.basicConfig(level=logging.DEBUG)
         else: logging.error('Unknown log level ' + log_level)
+
+    def setup_logger(self):
+        self.logger = logging.getLogger(self.thing_id or "Thing")
+        log_folder = LOG_PATH + '/'+ self.thing_id
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+        fh = logging.FileHandler(log_folder +'/'+ str(time.strftime("%Y-%m-%d_%H")) +'.log')
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
 
     def to_json(self):
         t = {}
@@ -149,6 +166,16 @@ class Thing:
         headers = {'Authorization': 'bearer ' + self.token}
         json_thing = requests.get(uri, headers=headers,
                                    verify=verifyCert).json()
+        return self.from_json(json_thing)
+
+    def readMQTT(self):
+        if self.mqtt_connected:
+            topic = "/things/" + self.thing_id + "/read"
+            requestId = random.randint(0,100)
+            self.logger.debug('Reading thing, response will come via /reply (request id: ' + str(requestId) + ')')
+            self.mqtt_client.publish(topic, json.dumps({'requestId': requestId}))
+
+    def from_json(self, json_thing):
         if json_thing is not None:
             if "message" in json_thing:
                 self.logger.error(json_thing)
@@ -191,14 +218,21 @@ class Thing:
             created_property.belongs_to(self)
             self.properties[created_property.property_id] = created_property
             return created_property
+    
+    def create_propertyMQTT(self, name, typeId):
+        my_property = Property(name=name, typeId=typeId)
+        if self.mqtt_connected:
+            topic = "/things/" + self.thing_id + "/properties/create"
+            requestId = random.randint(0,100)
+            self.logger.debug('Creating a property, response will come via /reply (request id: ' + str(requestId) + ')')
+            self.mqtt_client.publish(topic, json.dumps({'property': my_property, 'requestId': requestId}))
 
     def update_property(self, prop, file_name=None):
         if file_name is None and self.mqtt_connected:
-            topic = "/things/" + self.thing_id\
-                    + "/properties/" + prop.property_id
-            self.logger.debug('Updating property ' + prop.property_id)
-            self.mqtt_client.publish(topic,
-                                     json.dumps(prop.value_to_json()))
+            requestId = random.randint(0,100)
+            topic = "/things/" + self.thing_id + "/properties/" + prop.property_id + '/update'
+            self.logger.debug('Updating property ' + prop.property_id + '...')
+            self.mqtt_client.publish(topic, json.dumps({'requestId': requestId, 'property': prop.value_to_json()}))
         else:
             self.update_property_http(prop, file_name=file_name)
 
@@ -231,12 +265,17 @@ class Thing:
         create it if not found & return it
     -------------------------------------------------------------------------"""
     def find_or_create_property(self, property_name, typeId):
-
         if self.find_property_by_name(property_name) is None: #  property not found
+            print("# # # # # no prop with this name")
             self.create_property(name=property_name,
                                  typeId=typeId)
 
         return self.find_property_by_name(property_name)
+
+    def find_or_create_propertyMQTT(self, property_name, typeId):
+        if self.find_property_by_name(property_name) is None: #  property not found
+            self.create_propertyMQTT(name=property_name,
+                                 typeId=typeId)
 
     """-------------------------------------------------------------------------
         Recording video function, will find or create video property in current 
@@ -323,12 +362,14 @@ class Thing:
         # mqtt.on_disconnect = on_disconnect
         # mqtt.on_log = on_log
 
-        check_digi_cert_ca()
-        self.mqtt_client.tls_set(
-            "DigiCertCA.crt", cert_reqs=ssl.CERT_NONE,
-            tls_version=ssl.PROTOCOL_TLSv1_2)
+        if (MQTT_SECURED):
+            check_digi_cert_ca()
+            self.mqtt_client.tls_set(
+                "DigiCertCA.crt", cert_reqs=ssl.CERT_NONE,
+                tls_version=ssl.PROTOCOL_TLSv1_2)
 
-        self.mqtt_client.tls_insecure_set(True)
+            self.mqtt_client.tls_insecure_set(True)
+
         self.mqtt_client.username_pw_set(username=self.thing_id,
                                          password=self.token)
         self.mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
@@ -352,13 +393,13 @@ class Thing:
         # reconnect then subscriptions will be renewed.
 
         # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
-        self.mqtt_client.subscribe([("/things/" + self.thing_id + "/logs", 1)])
+        self.mqtt_client.subscribe([("/things/" + self.thing_id + "/log", 1), ("/things/" + self.thing_id + "/reply", 1)])
 
     """
         The callback for when a PUBLISH message is received from the server.
     """
     def on_mqtt_message(self, client, userdata, msg):
-        if msg.topic.endswith("/logs"):
+        if msg.topic.endswith("/log"):
             jsonMsg = json.loads(msg.payload)
             if jsonMsg['level'] == 'error':
                 self.logger.error("[mqtt-log] " + str(jsonMsg))
@@ -366,6 +407,30 @@ class Thing:
                 self.logger.info("[mqtt-log] " + str(jsonMsg))
             elif jsonMsg['level'] == 'debug':
                 self.logger.debug("[mqtt-log] " + str(jsonMsg))
-            
+        
+        elif msg.topic.endswith("/reply"):
+            jsonMsg = json.loads(msg.payload)
+            self.logger.debug("[mqtt-log] Received response on /reply (request id: " + str(jsonMsg['requestId']) + ')')
+            if jsonMsg['thing'] is not None:
+                self.logger.debug('Loading thing details received from Bucket...')
+                self.from_json(jsonMsg['thing'])
+                self.logger.debug(json.dumps(self.to_json()))
+            elif jsonMsg['property'] is not None:
+                self.logger.debug('Adding new property ' + jsonMsg['property'].id + '...')
+                created_property = Property(json_property=jsonMsg['property'])
+                created_property.belongs_to(self)
+                self.properties[created_property.property_id] = created_property
+                return created_property
+
         else:
             self.logger.info("[mqtt-log] " + msg.topic + ": " + msg.payload.toString())
+
+    def update_ip(self):
+        ip_address = self.find_or_create_property('IP Address', 'IP_ADDRESS')
+        local_ip = get_local_ip()
+        type_local_ip = check_type_ip(local_ip)
+        external_ip = get_external_ip()
+        type_external_ip =  check_type_ip(external_ip)
+        values = (local_ip, type_local_ip, external_ip, type_external_ip)
+        ip_address.update_values(values)
+    

@@ -2,7 +2,7 @@
 
 Python SDK for the tools of the Data-Centric Design Lab
 
-![version](https://img.shields.io/badge/version-0.1.3-blue.svg)
+![version](https://img.shields.io/badge/version-0.1.6-blue.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 [![GitHub issues open](https://img.shields.io/github/issues/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
 [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/datacentricdesign/dcd-sdk-python.svg?maxAge=2592000)]()
@@ -61,7 +61,7 @@ Your Python setup is now ready.
 In this example we will create a property Accelerometer generating random values. It shows how to establish a connection with 
 Bucket using your Thing id and your private key. This is a typical case for a Python code running on a device to collect data. 
 
-In the file explorer (left-side panel), create a new file 'example.py' and add the following lines.
+In the file explorer (left-side panel), create a new file `example.py` and add the following lines.
 
 ```python
 # Import Thing from the Data-Centric Design 
@@ -79,7 +79,7 @@ You can run this example in the terminal:
 python example.py
 ```
 
-To stop the programme, press CTRL+C.
+To stop the programme, press `CTRL+C`.
 
 Once the connection is established with your Thing, we can get an overview of
 this Thing by printing the output of the method to_json(). Add the following
@@ -110,8 +110,8 @@ We are ready to send data. In the code below we create a function that generates
 an array with 3 random values and add them to the property. We then make an infinite
 loop (while True) to send these random values every 2 seconds.
 
-To generate random numbers we need the library 'random' and to wait 2 seconds
-we need the library 'time'. These are part of Python, we just import them at
+To generate random numbers we need the library `random` and to wait 2 seconds
+we need the library `time`. These are part of Python, we just import them at
 the top of the file.
 
 ```python
@@ -195,4 +195,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2020-08-24
+
 ### Added
+- Automatic generation of property IP_ADDRESS
+
+## [0.1.3] - 2020-08-13
+
+### Added
+- Extended MQTT API
+
