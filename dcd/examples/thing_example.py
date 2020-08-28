@@ -30,7 +30,7 @@ def main():
 
     # If we have no properties, let's create a random one
     my_property = my_thing.find_or_create_property(
-        "Heart Rate", 'HEART_RATE')
+        "Random Accelerometer", 'ACCELEROMETER')
 
     # Let's have a look at the property, it should
     # contains the name, a unique id and the dimensions
@@ -39,7 +39,7 @@ def main():
     # Let's create a function that generate random values
     def generate_dum_property_values(the_property):
         # Define a tuple with the current time, and 3 random values
-        values = (random(), random())
+        values = (random(), random(), random())
         # Update the values of the property
         the_property.update_values(values)
 
