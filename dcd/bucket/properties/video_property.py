@@ -66,3 +66,27 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
 
     def connection_lost(self, exc):
         loop.stop()  # end loop.run_forever()
+
+    """-------------------------------------------------------------------------
+        Recording video function, will find or create video property in current 
+        thing, with default property name "WebCam", and thing  credentials in
+        ThingCredentials class wrapper
+    -------------------------------------------------------------------------"""
+    # def start_video_recording(self,
+    #                           property_name='WebCam',
+    #                           port='/dev/video0',
+    #                           segment_size='30'):
+
+    #     #  Finding or creating our video property
+    #     video_property = self.find_or_create_property(property_name, 'VIDEO')
+
+    #     self.video_recorder = VideoRecorder(video_property, port, segment_size)
+    #     self.logger.info('Start video recording on property '
+    #                      + video_property.property_id)
+
+    #     self.video_recorder.start_recording()
+
+    # def stop_video_recording(self):
+    #     if self.video_recorder is not None:
+    #         self.video_recorder.stop_recording()
+

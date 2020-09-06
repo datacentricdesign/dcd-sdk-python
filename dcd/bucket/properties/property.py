@@ -2,12 +2,10 @@ import math
 from datetime import datetime
 from enum import Enum
 
-"""----------------------------------------------------------------------------
-    Class that contains all possible property types for a property in a thing
-----------------------------------------------------------------------------"""
-
 class Property:
-    """"A DCD 'Property' represents a numerical property of a Thing."""
+    """"
+    A DCD 'Property' represents a numerical property of a Thing.
+    """
 
     def __init__(self,
                  property_id=None,

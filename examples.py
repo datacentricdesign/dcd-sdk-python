@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import os
 import sys
 
-from dcd.entities.thing import Thing
+from dcd.bucket.thing import Thing
 
 def main():
     # The thing ID
@@ -21,7 +21,7 @@ def main():
     my_thing = Thing(thing_id=THING_ID)
 
     # If we fail to connect to the Thing, we leave the program
-    if not my_thing.http_connected:
+    if not my_thing.http.is_connected:
         sys.exit()
 
     # If you just registered your Thing on the DCD Hub,

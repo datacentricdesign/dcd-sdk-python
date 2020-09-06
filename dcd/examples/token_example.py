@@ -1,8 +1,7 @@
 # Example of generating/reading a JWT token
 # This is integrated in the Thing and done automatically
 
-from dcd.helpers.token import generate_jwt
-from dcd.helpers.token import read_jwt
+from dcd.bucket.thing_token import ThingToken
 
 from dotenv import load_dotenv
 import os
@@ -10,13 +9,14 @@ import os
 # The thing ID and access token
 load_dotenv()
 THING_ID = os.environ['THING_ID']
+HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
 
-API_URL='https://dwd.tudelft.nl:443/bucket/api'
+token = ThingToken('private.pem', THING_ID, HTTP_URI, HTTP_URI)
 
-jwt = generate_jwt('private.pem', THING_ID, API_URL, API_URL)
+jwt = token.get_token()
 
 print(jwt)
 
-message = read_jwt('public.pem', jwt)
+message = token.read_jwt('public.pem', jwt)
 
 print(message)
