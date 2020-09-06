@@ -6,19 +6,11 @@
 from random import random
 import time
 
-from dotenv import load_dotenv
-import os
-import sys
-
 from dcd.bucket.thing import Thing
 
 def main():
-    # The thing ID
-    load_dotenv()
-    THING_ID = os.environ['THING_ID']
-
     # Instantiate a thing with its credential
-    my_thing = Thing(thing_id=THING_ID)
+    my_thing = Thing()
 
     # If you just registered your Thing on the DCD Hub,
     # it has only an id, a name and a type.

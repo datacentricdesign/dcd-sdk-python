@@ -8,15 +8,15 @@ import os
 
 # The thing ID and access token
 load_dotenv()
-THING_ID = os.environ['THING_ID']
-HTTP_URI = os.getenv('HTTP_URI', 'https://dwd.tudelft.nl:443/bucket/api')
+THING_ID = os.environ["THING_ID"]
+HTTP_URI = os.getenv("HTTP_URI", "https://dwd.tudelft.nl:443/bucket/api")
 
-token = ThingToken('private.pem', THING_ID, HTTP_URI, HTTP_URI)
+token = ThingToken("private.pem", THING_ID, HTTP_URI, HTTP_URI)
 
 jwt = token.get_token()
 
 print(jwt)
 
-message = token.read_jwt('public.pem', jwt)
+message = token.read_jwt("public.pem", jwt)
 
 print(message)

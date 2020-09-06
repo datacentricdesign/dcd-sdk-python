@@ -51,7 +51,7 @@ Your Python setup is now ready.
 Basic example
 *************
 
-In this example we will create a property Accelerometer generating random values. It shows how to establish a connection with 
+In this example, we will create a property Accelerometer generating random values. It shows how to establish a connection with 
 Bucket using your Thing id and your private key. This is a typical case for a Python code running on a device to collect data. 
 
 In the file explorer (left-side panel), create a new file `example.py` and add the following lines.
@@ -64,8 +64,8 @@ In the file explorer (left-side panel), create a new file `example.py` and add t
 
     # Create an instance of Thing
     # (Replace with your thing id and the path to your private key)
-    my_thing = Thing(thing_id='dcd:things:7f7fe4c6-45e9-42d2-86e2-a6794e386108',
-                    private_key_path='/path/to/private.pem')
+    my_thing = Thing(thing_id="dcd:things:7f7fe4c6-45e9-42d2-86e2-a6794e386108",
+                    private_key_path="/path/to/private.pem")
 
 
 You can run this example in the terminal:
@@ -93,7 +93,7 @@ new on with the type 'ACCELEROMETER'
 .. code-block:: python
 
     my_property = my_thing.find_or_create_property(
-        "My Python Accelerometer", 'ACCELEROMETER')
+        "My Python Accelerometer", "ACCELEROMETER")
 
 Let's have a look at the property, it should contain the name and a unique id.
 The type also contains the dimensions, 3 in the case of an accelerometer.
@@ -133,6 +133,18 @@ Then, we can write our function at the bottom of the file.
         generate_dum_property_values(my_property)
         # Have a 2-second break
         time.sleep(2)
+
+Environment Variables
+*********************
+
+To avoid credentials in your code, the DCD Python Kit is looking for your thing id and private key
+from the environment variables. To set these variables, create a file `.env` and add the following lines
+(replace the thing id and the path by yours).
+
+.. code-block:: console
+
+    THING_ID=dcd:things:7f7fe4c6-45e9-42d2-86e2-a6794e386108
+    PRIVATE_KEY_PATH=/path/to/private.pem
 
 
 The full example can be found `Here <https://github.com/datacentricdesign/dcd-sdk-python/blob/master/dcd/examples.py>`_

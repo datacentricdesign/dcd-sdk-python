@@ -19,7 +19,7 @@ Python SDK for the tools of the Data-Centric Design Lab
 Instantiate a connection to Bucket for a Thing
 
   * thing_id (required), the id of the Thing to connect
-  * private_key_path (optional), the path to the private key. If no path is provided, it looks for the file 'private.pem' in the current folder.
+  * private_key_path (optional), the path to the private key. If no path is provided, it looks for the file "private.pem" in the current folder.
 
 * thing.read()
 

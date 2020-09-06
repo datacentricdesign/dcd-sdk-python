@@ -6,19 +6,17 @@
 from random import random
 import time
 
-from dotenv import load_dotenv
-import os
 import sys
 
 from dcd.bucket.thing import Thing
 
 def main():
-    # The thing ID
-    load_dotenv()
-    THING_ID = os.environ['THING_ID']
-
     # Instantiate a thing with its credential
-    my_thing = Thing(thing_id=THING_ID)
+    # By default, looking into .env for THING_ID and PRIVATE_KEY_PATH (default "./private.pem")
+    my_thing = Thing()
+
+    # Instead you code put your credentials in the code (not recommended)
+    # my_thing = Thing(thing_id="dcd:things:...", private_key_path="path/to/private.pem")
 
     # If we fail to connect to the Thing, we leave the program
     if not my_thing.http.is_connected:
@@ -30,7 +28,7 @@ def main():
 
     # If we have no properties, let's create a random one
     my_property = my_thing.find_or_create_property(
-        "Random Accelerometer", 'ACCELEROMETER')
+        "Random Accelerometer", "ACCELEROMETER")
 
     # Let's have a look at the property, it should
     # contains the name, a unique id and the dimensions

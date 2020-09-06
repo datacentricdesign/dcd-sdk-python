@@ -3,12 +3,15 @@ import asyncio
 import math
 import time
 
+from .property import Property
+
 loop = asyncio.get_event_loop()
-video_property=None
+video_property = None
+
 
 class VideoRecorder(asyncio.SubprocessProtocol):
 
-    def __init__(self, prop, port='/dev/video0', segment_size='30'):
+    def __init__(self, prop: Property, port: str = "/dev/video0", segment_size: str = "30"):
         self.current_video_file = None
         self.current_video_start_ts = None
         global video_property
@@ -21,15 +24,15 @@ class VideoRecorder(asyncio.SubprocessProtocol):
         try:
             loop.run_until_complete(
                 loop.subprocess_exec(SubProcessRecorder,
-                                          "ffmpeg",
-                                          "-f", "video4linux2",
-                                          "-i", self.port,
-                                          "-reset_timestamps", "1",
-                                          "-f", "segment",
-                                          "-segment_time", self.segment_size,
-                                          "-segment_format",
-                                          "mp4",
-                                          "capture-%03d.mp4"))
+                                     "ffmpeg",
+                                     "-f", "video4linux2",
+                                     "-i", self.port,
+                                     "-reset_timestamps", "1",
+                                     "-f", "segment",
+                                     "-segment_time", self.segment_size,
+                                     "-segment_format",
+                                     "mp4",
+                                     "capture-%03d.mp4"))
 
             loop.run_forever()
         finally:
@@ -59,7 +62,7 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
                 ts = self.current_video_start_ts
                 duration = new_time - ts
                 thread = Thread(target=video_property.update_values,
-                                kwargs={"values": [duration], "time_ms": ts, "file_name":file_name})
+                                kwargs={"values": [duration], "time_ms": ts, "file_name": file_name})
                 thread.start()
             self.current_video_start_ts = new_time
             self.current_video_file = new_file
@@ -73,15 +76,15 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
         ThingCredentials class wrapper
     -------------------------------------------------------------------------"""
     # def start_video_recording(self,
-    #                           property_name='WebCam',
-    #                           port='/dev/video0',
-    #                           segment_size='30'):
+    #                           property_name="WebCam",
+    #                           port="/dev/video0",
+    #                           segment_size="30"):
 
     #     #  Finding or creating our video property
-    #     video_property = self.find_or_create_property(property_name, 'VIDEO')
+    #     video_property = self.find_or_create_property(property_name, "VIDEO")
 
     #     self.video_recorder = VideoRecorder(video_property, port, segment_size)
-    #     self.logger.info('Start video recording on property '
+    #     self.logger.info("Start video recording on property "
     #                      + video_property.property_id)
 
     #     self.video_recorder.start_recording()
@@ -89,4 +92,3 @@ class SubProcessRecorder(asyncio.SubprocessProtocol):
     # def stop_video_recording(self):
     #     if self.video_recorder is not None:
     #         self.video_recorder.stop_recording()
-
