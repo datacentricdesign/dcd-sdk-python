@@ -24,6 +24,7 @@ author = 'DCD Lab <lab@datacentricdesign.org>'
 # The full version, including alpha/beta/rc tags
 release = '0.1.7'
 
+master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 
