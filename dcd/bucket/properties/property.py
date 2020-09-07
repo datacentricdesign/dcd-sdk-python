@@ -1,53 +1,52 @@
 import math
+import json
 from datetime import datetime
 from enum import Enum
 
-"""----------------------------------------------------------------------------
-    Class that contains all possible property types for a property in a thing
-----------------------------------------------------------------------------"""
+# from ..thing import Thing
+
 
 class Property:
-    """"A DCD 'Property' represents a numerical property of a Thing."""
+    """"
+    A DCD "Property" represents a numerical property of a Thing.
+    """
 
     def __init__(self,
-                 property_id=None,
-                 name=None,
-                 description=None,
-                 typeId=None,
-                 propertyType=None,
-                 json_property=None,
-                 values=(),
-                 classes=None,
-                 entity=None):
+                 property_id: str = None,
+                 name: str = None,
+                 description: str = None,
+                 type_id: str = None,
+                 property_type: dict = None,
+                 json_property: dict = None,
+                 values: dict = (),
+                 thing=None):
 
         self.subscribers = []
-        self.entity = entity
+        self.thing = thing
 
         if json_property is not None:
-            self.property_id = json_property['id']
-            self.name = json_property['name']
-            self.description = json_property['description']
-            if 'type' in json_property:
-                self.type = json_property['type']
-                self.typeId = self.type["id"]
-            elif json_property['typeId'] is not None:
-                self.typeId = json_property['typeId']
-            if 'values' in json_property:
-                self.values = json_property['values']
-            else:
-                self.values = []
-            if 'classes' in json_property:
-                self.classes = json_property['classes']
-            else:
-                self.classes = []
+            self.from_json(json_property)
         else:
             self.property_id = property_id
             self.name = name
             self.description = description
-            self.typeId = typeId
-            self.type = propertyType
+            self.type_id = type_id
+            self.type = property_type
             self.values = values
-            self.classes = classes
+
+    def from_json(self, json_property: dict):
+        self.property_id = json_property["id"]
+        self.name = json_property["name"]
+        self.description = json_property["description"]
+        if "type" in json_property:
+            self.type = json_property["type"]
+            self.type_id = self.type["id"]
+        elif json_property["typeId"] is not None:
+            self.type_id = json_property["typeId"]
+        if "values" in json_property:
+            self.values = json_property["values"]
+        else:
+            self.values = []
 
     def to_json(self):
         p = {}
@@ -57,15 +56,13 @@ class Property:
             p["name"] = self.name
         if self.description is not None:
             p["description"] = self.description
-        if self.typeId is not None:
-            p["typeId"] = self.typeId
+        if self.type_id is not None:
+            p["typeId"] = self.type_id
         if self.values is not None and len(self.values) > 0:
             p["values"] = self.values
-        if self.classes is not None and len(self.classes) > 0:
-            p["classes"] = self.classes
         return p
 
-    def value_to_json(self):
+    def value_to_json(self) -> dict:
         p = {}
         if self.property_id is not None:
             p["id"] = self.property_id
@@ -73,10 +70,10 @@ class Property:
             p["values"] = self.values
         return p
 
-    def belongs_to(self, entity):
-        self.entity = entity
+    def belongs_to(self, thing):
+        self.thing = thing
 
-    def update_values(self, values, time_ms=None, file_name=None):
+    def update_values(self, values: dict, time_ms: int = None, file_name: str = None):
         ts = time_ms
         if ts is None:
             dt = datetime.utcnow()
@@ -90,20 +87,32 @@ class Property:
         self.values = []
         self.values.append(values_with_ts)
 
-        if self.typeId == 'VIDEO' and file_name is None:
-            raise ValueError('Missing file name for VIDEO property update.')
+        if self.type_id == "VIDEO" and file_name is None:
+            raise ValueError("Missing file name for VIDEO property update.")
 
-        self.entity.update_property(self, file_name)
+        self.thing.update_property(self, file_name)
 
-    def read(self, from_ts=None, to_ts=None):
-        DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+    def read(self, from_ts = None, to_ts = None):
+        """Read the details of a property from Bucket
+
+        Args:
+            from_ts : int|str, optional
+                The start time of the values to fetch. Can be a UNIX timestamp in milliseconds or a string date '%Y-%m-%d %H:%M:%S'. Defaults to None.
+            to_ts : int|str, optional
+                The end time of the values to fetch.  Can be a UNIX timestamp in milliseconds or a string date '%Y-%m-%d %H:%M:%S'. Defaults to None.
+        Returns:
+            Property: The property with its details and values.
+        """
+        DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
         if type(from_ts) is "string":
-            from_ts = datetime.timestamp(datetime.strptime(from_ts, DATE_FORMAT)) * 1000
+            from_ts = datetime.timestamp(
+                datetime.strptime(from_ts, DATE_FORMAT)) * 1000
         if type(to_ts) is "string":
-            to_ts = datetime.timestamp(datetime.strptime(to_ts, DATE_FORMAT)) * 1000
-        self.entity.read_property(self.property_id, from_ts, to_ts)
+            to_ts = datetime.timestamp(
+                datetime.strptime(to_ts, DATE_FORMAT)) * 1000
+        self.thing.read_property(self.property_id, from_ts, to_ts)
 
-    def subscribe(self, uri):
+    def subscribe(self, uri: str):
         self.subscribers.append(uri)
 
     def align_values_to(self, prop2):
@@ -122,7 +131,6 @@ class Property:
                 last_val = self.values[values_index]
                 values_index += 1
 
-
             if last_val is not None:
                 # Make a copy, change the timestamp to the one in property 2
                 # and add it to the new list of values.
@@ -134,25 +142,25 @@ class Property:
 
     def merge(self, prop2):
         """
-            Create a new Property with id and name of form 'prop1+prop2',
+            Create a new Property with id and name of form "prop1+prop2",
             concat dimension and values (MUST have same number of rows)
             and return this new property
         """
-        prop3 = Property(property_id=self.property_id + '+' + prop2.property_id,
-                         name=self.name + ' + ' + prop2.name)
+        prop3 = Property(
+            property_id=f"{self.property_id}+{prop2.property_id}",
+            name=f"{self.name}+{prop2.name}")
 
         # Concat dimensions
         prop3.dimensions = self.dimensions + prop2.dimensions
         # Remove timestamps from property 2
         values2_no_ts = map(lambda x: x[1:], prop2.values)
         # concat property 1 and 2 (only 1 timestamp from prop 1)
-        prop3.values = [a+b for a,b in zip(self.values, values2_no_ts)]
+        prop3.values = [a+b for a, b in zip(self.values, values2_no_ts)]
 
         return prop3
 
-    def create_classes(self, classes):
-        self.entity.create_classes(self, classes)
-
+    def describe(self):
+        print(json.dumps(self.to_json(), indent=4, sort_keys=True))
 
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)

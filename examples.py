@@ -6,35 +6,33 @@
 from random import random
 import time
 
-from dotenv import load_dotenv
-import os
 import sys
 
-from dcd.entities.thing import Thing
+from dcd.bucket.thing import Thing
 
 def main():
-    # The thing ID
-    load_dotenv()
-    THING_ID = os.environ['THING_ID']
-
     # Instantiate a thing with its credential
-    my_thing = Thing(thing_id=THING_ID)
+    # By default, looking into .env for THING_ID and PRIVATE_KEY_PATH (default "./private.pem")
+    my_thing = Thing()
+
+    # Instead you code put your credentials in the code (not recommended)
+    # my_thing = Thing(thing_id="dcd:things:...", private_key_path="path/to/private.pem")
 
     # If we fail to connect to the Thing, we leave the program
-    if not my_thing.http_connected:
+    if not my_thing.http.is_connected:
         sys.exit()
 
     # If you just registered your Thing on the DCD Hub,
     # it has only an id, a name and a type.
-    print(my_thing.to_json())
+    my_thing.describe()
 
     # If we have no properties, let's create a random one
     my_property = my_thing.find_or_create_property(
-        "Random Accelerometer", 'ACCELEROMETER')
+        "Random Accelerometer", "ACCELEROMETER")
 
     # Let's have a look at the property, it should
     # contains the name, a unique id and the dimensions
-    print(my_property.to_json())
+    my_property.describe()
 
     # Let's create a function that generate random values
     def generate_dum_property_values(the_property):
