@@ -75,8 +75,10 @@ class ThingToken:
         """Decode a JWT, revealing the dictionary of its values
 
         Args:
-            public_key_path (str, optional): The path to the public key. If none provided, looking at PUBLIC_KEY_PATH environment variable, or use './public.pem' as default. Defaults to None.
-            jwt (str, optional): String representing the JSON web token. If none provided, taking the one from the class Defaults to None.
+            public_key_path : str, optional
+                The path to the public key. If none provided, looking at PUBLIC_KEY_PATH environment variable, or use './public.pem' as default. Defaults to None.
+            jwt : str, optional
+                String representing the JSON web token. If none provided, taking the one from the class Defaults to None.
 
         Returns:
             dict: Decoded JSON Web Token including the issuer (iss), audience (aud),

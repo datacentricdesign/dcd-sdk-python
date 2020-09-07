@@ -35,6 +35,12 @@ MQTT_SECURED = os.getenv("MQTT_SECURED", "True") == "True"
 class ThingMQTT:
 
     def __init__(self, thing):
+        """Create the MQTT link between the Thing and its digital twin on Bucket
+
+        Args:
+            thing : Thing
+                The Thing to connect to Bucket via MQTT
+        """
         self.thing = thing
         self.logger = thing.logger
 
@@ -53,8 +59,8 @@ class ThingMQTT:
         self.mqtt_client = mqtt.Client()
         global mqtt_client
         mqtt_client = self.mqtt_client
-        self.mqtt_client.on_connect = self.on_mqtt_connect
-        self.mqtt_client.on_message = self.on_mqtt_message
+        self.mqtt_client.on_connect = self.__on_mqtt_connect
+        self.mqtt_client.on_message = self.__on_mqtt_message
 
         # self.mqtt_client.on_subscribe = self.on_mqtt_subscribe
         # mqtt.on_publish = on_publish
@@ -99,22 +105,37 @@ class ThingMQTT:
                 {"property": my_property, "requestId": requestId}))
 
     def find_or_create_property(self, property_name: str, type_id: str):
+        """Search for a property in thing by name, create it if not found & return it.
+
+        Args:
+            property_name : str
+                The name of the property to look for.
+            type_id : str
+                The type of the property, so that we can create it if it is not found.
+        """
         # property not found
         if self.thing.find_property_by_name(property_name) is None:
-            self.create_property(name=property_name,
-                                     type_id=type_id)
+            self.create_property(name=property_name, type_id=type_id)
 
     def update_property(self, prop: Property, file_name: str):
+        """Send new property values to Bucket
+
+        Args:
+            prop : Property
+                The property containing values to send
+            file_name : str, optional
+                If media type property, the path to the file to upload. Defaults to None.
+        """
         requestId = random.randint(0, 100)
         topic = "/things/" + self.thing.thing_id + "/properties/" + prop.property_id + "/update"
         self.logger.debug("[mqtt] Updating property " + prop.property_id + "...")
-        self.publish(topic, json.dumps(
+        self.__publish(topic, json.dumps(
             {"requestId": requestId, "property": prop.value_to_json()}))
 
-    def publish(self, topic: str, payload: str):
+    def __publish(self, topic: str, payload: str):
         self.mqtt_client.publish(topic, payload)
 
-    def on_mqtt_connect(self, client, userdata, flags, rc):
+    def __on_mqtt_connect(self, client, userdata, flags, rc):
         """
         The callback for when the client receives
         a CONNACK response from the server.
@@ -130,7 +151,7 @@ class ThingMQTT:
         self.mqtt_client.subscribe(
             [("/things/" + self.thing.thing_id + "/log", 1), ("/things/" + self.thing.thing_id + "/reply", 1)])
 
-    def on_mqtt_message(self, client, userdata, msg):
+    def __on_mqtt_message(self, client, userdata, msg):
         """
         The callback for when a PUBLISH message is received from the server.
         """

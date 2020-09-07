@@ -1,8 +1,10 @@
 import math
+import json
 from datetime import datetime
 from enum import Enum
 
 # from ..thing import Thing
+
 
 class Property:
     """"
@@ -17,7 +19,7 @@ class Property:
                  property_type: dict = None,
                  json_property: dict = None,
                  values: dict = (),
-                 thing = None):
+                 thing=None):
 
         self.subscribers = []
         self.thing = thing
@@ -60,7 +62,7 @@ class Property:
             p["values"] = self.values
         return p
 
-    def value_to_json(self):
+    def value_to_json(self) -> dict:
         p = {}
         if self.property_id is not None:
             p["id"] = self.property_id
@@ -71,7 +73,7 @@ class Property:
     def belongs_to(self, thing):
         self.thing = thing
 
-    def update_values(self, values, time_ms=None, file_name=None):
+    def update_values(self, values: dict, time_ms: int = None, file_name: str = None):
         ts = time_ms
         if ts is None:
             dt = datetime.utcnow()
@@ -90,7 +92,17 @@ class Property:
 
         self.thing.update_property(self, file_name)
 
-    def read(self, from_ts=None, to_ts=None):
+    def read(self, from_ts = None, to_ts = None):
+        """Read the details of a property from Bucket
+
+        Args:
+            from_ts : int|str, optional
+                The start time of the values to fetch. Can be a UNIX timestamp in milliseconds or a string date '%Y-%m-%d %H:%M:%S'. Defaults to None.
+            to_ts : int|str, optional
+                The end time of the values to fetch.  Can be a UNIX timestamp in milliseconds or a string date '%Y-%m-%d %H:%M:%S'. Defaults to None.
+        Returns:
+            Property: The property with its details and values.
+        """
         DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
         if type(from_ts) is "string":
             from_ts = datetime.timestamp(
@@ -100,7 +112,7 @@ class Property:
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
         self.thing.read_property(self.property_id, from_ts, to_ts)
 
-    def subscribe(self, uri):
+    def subscribe(self, uri: str):
         self.subscribers.append(uri)
 
     def align_values_to(self, prop2):
@@ -134,8 +146,9 @@ class Property:
             concat dimension and values (MUST have same number of rows)
             and return this new property
         """
-        prop3 = Property(property_id=self.property_id + "+" + prop2.property_id,
-                         name=self.name + " + " + prop2.name)
+        prop3 = Property(
+            property_id=f"{self.property_id}+{prop2.property_id}",
+            name=f"{self.name}+{prop2.name}")
 
         # Concat dimensions
         prop3.dimensions = self.dimensions + prop2.dimensions
@@ -146,6 +159,8 @@ class Property:
 
         return prop3
 
+    def describe(self):
+        print(json.dumps(self.to_json(), indent=4, sort_keys=True))
 
 def unix_time_millis(dt):
     epoch = datetime.utcfromtimestamp(0)

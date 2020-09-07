@@ -7,6 +7,8 @@ Welcome to DCD Lab Python Kit's documentation!
    :caption: Contents:
 
    get_started
+   bucket
+   envvar
 
 Indices and tables
 ==================
