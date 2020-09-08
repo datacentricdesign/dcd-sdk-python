@@ -15,7 +15,7 @@ def main():
     # By default, looking into .env for THING_ID and PRIVATE_KEY_PATH (default "./private.pem")
     my_thing = Thing()
 
-    # Instead you code put your credentials in the code (not recommended)
+    # Instead you could put your credentials in the code (not recommended)
     # my_thing = Thing(thing_id="dcd:things:...", private_key_path="path/to/private.pem")
 
     # If we fail to connect to the Thing, we leave the program
