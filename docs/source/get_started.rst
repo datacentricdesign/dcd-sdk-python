@@ -60,7 +60,7 @@ In the file explorer (left-side panel), create a new file `example.py` and add t
    :linenos:
 
     # Import Thing from the Data-Centric Design 
-    from dcd.entities.thing import Thing
+    from dcd.bucket.thing import Thing
 
     # Create an instance of Thing
     # (Replace with your thing id and the path to your private key)
