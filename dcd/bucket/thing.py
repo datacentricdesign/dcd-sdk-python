@@ -11,6 +11,7 @@ from .properties.ip_address_property import IPAddressProperty
 
 load_dotenv()
 THING_ID = os.getenv("THING_ID", None)
+PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", None)
 HTTP_API_URI = os.getenv(
     "HTTP_API_URI", "https://dwd.tudelft.nl:443/bucket/api")
 
@@ -41,7 +42,7 @@ class Thing:
 
     def __init__(self,
                  thing_id: str = None,
-                 private_key_path: str = "private.pem",
+                 private_key_path: str = None,
                  json_thing: dict = None):
         """
         Constructs a Thing, generating an JSON Web token, attempting a connection via HTTP to read the Thing deails from Bucket, connecting to MQTT
@@ -70,6 +71,13 @@ class Thing:
             self.thing_type = None
             self.private_key_path = private_key_path
 
+            # If the private_key_path was not provided, try to load it from the environment variables
+            if self.private_key_path is None:
+                if PRIVATE_KEY_PATH is not None:
+                    self.private_key_path = PRIVATE_KEY_PATH
+                else:
+                    self.private_key_path = "private.pem"
+
             self.created_at = None
             self.updated_at = None
 
@@ -79,7 +87,7 @@ class Thing:
         # If there is a thing id, try to connect
         if self.thing_id is not None:
             self.token = ThingToken(
-                private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI)
+                self.private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI)
             self.http = ThingHTTP(self, HTTP_API_URI)
 
             # Loads all thing's details

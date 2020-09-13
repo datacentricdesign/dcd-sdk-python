@@ -9,7 +9,6 @@ from jwt import (
 )
 
 load_dotenv()
-PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", "private.pem")
 PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH", "public.pem")
 
 
