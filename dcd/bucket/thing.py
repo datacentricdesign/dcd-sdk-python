@@ -15,6 +15,7 @@ PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", None)
 HTTP_API_URI = os.getenv(
     "HTTP_API_URI", "https://dwd.tudelft.nl:443/bucket/api")
 
+DIGI_CERT_CA = os.getenv("DIGI_CERT_CA", "DigiCertCA.crt")
 
 class Thing:
     """
@@ -94,7 +95,7 @@ class Thing:
             if self.http.is_connected():
                 self.ip_address_property = IPAddressProperty(self.logger, self)
                 # Start the MQTT connection
-                self.mqtt = ThingMQTT(self)
+                self.mqtt = ThingMQTT(self, DIGI_CERT_CA)
 
     def to_json(self):
         t = {}

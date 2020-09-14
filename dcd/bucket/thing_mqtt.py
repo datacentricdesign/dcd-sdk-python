@@ -34,7 +34,7 @@ MQTT_SECURED = os.getenv("MQTT_SECURED", "True") == "True"
 
 class ThingMQTT:
 
-    def __init__(self, thing):
+    def __init__(self, thing, DigiCertCA = "DigicertCA"):
         """Create the MQTT link between the Thing and its digital twin on Bucket
 
         Args:
@@ -49,6 +49,7 @@ class ThingMQTT:
         
         self.thread_mqtt = Thread(target=self.init)
         self.thread_mqtt.start()       
+        self.DigiCertCA = DigiCertCA
 
     def is_connected(self):
         return self.connected
@@ -68,9 +69,9 @@ class ThingMQTT:
         # mqtt.on_log = on_log
 
         if (MQTT_SECURED):
-            check_digi_cert_ca()
+            check_digi_cert_ca(self.DigiCertCA)
             self.mqtt_client.tls_set(
-                "DigiCertCA.crt", cert_reqs=ssl.CERT_NONE,
+                self.DigiCertCA, cert_reqs=ssl.CERT_NONE,
                 tls_version=ssl.PROTOCOL_TLSv1_2)
 
             self.mqtt_client.tls_insecure_set(True)
@@ -198,20 +199,20 @@ def mqtt_result_code(rc):
     return switcher.get(rc, "Unknown result code: " + str(rc))
 
 
-def check_digi_cert_ca():
+def check_digi_cert_ca(DigiCertCA):
     try:
-        f = open("DigiCertCA.crt")
-        logging.debug("DigiCertCA.crt exist.")
+        f = open(DigiCertCA)
+        logging.debug(DigiCertCA + " exist.")
         f.close()
     except IOError:
-        logging.debug("DigiCertCA.crt missing, downloading...")
+        logging.debug(DigiCertCA + " missing, downloading...")
         # Send HTTP GET request to github to fetch the certificate
         response = requests.get("https://raw.githubusercontent.com/datacentricdesign/dcd-hub/develop/certs/DigiCertCA.crt")
         # If the HTTP GET request can be served
         if response.status_code == 200:
             # Write the file contents in the response to a file specified by
             # local_file_path
-            with open("DigiCertCA.crt", "wb") as local_file:
+            with open(DigiCertCA, "wb") as local_file:
                 for chunk in response.iter_content(chunk_size=128):
                     local_file.write(chunk)
             logging.debug("DigiCertCA.crt downloaded.")

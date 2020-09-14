@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2020-09-14
 
-## [0.1.8] - 2020-08-24
+### Added
+- DigiCertCA env var
+
+## [0.1.8] - 2020-09-13
 
 ### Fixed
 
