@@ -31,10 +31,10 @@ class ThingLogger:
 
     def setup_logger(self):
         self.logger = logging.getLogger(self.thing.thing_id or "Thing")
-        self.log_folder = self.LOG_PATH + "/" + self.thing.thing_id
+        self.log_folder = self.LOG_PATH + "/" + self.thing.thing_id.replace("dcd:things:", "")
         if not os.path.exists(self.log_folder):
             os.makedirs(self.log_folder)
-        self.data_folder = self.DATA_PATH + "/" + self.thing.thing_id
+        self.data_folder = self.DATA_PATH + "/" + self.thing.thing_id.replace("dcd:things:", "")
         if not os.path.exists(self.data_folder):
             os.makedirs(self.data_folder)
         fh = logging.FileHandler(
