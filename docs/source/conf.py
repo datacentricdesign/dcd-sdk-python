@@ -22,7 +22,7 @@ copyright = "2020, DCD Lab <lab@datacentricdesign.org>"
 author = "DCD Lab <lab@datacentricdesign.org>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.11"
+release = "0.1.12"
 
 master_doc = "index"
 
