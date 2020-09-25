@@ -1,4 +1,4 @@
-import datetime
+from time import time
 import os
 from dotenv import load_dotenv
 
@@ -10,6 +10,7 @@ from jwt import (
 
 load_dotenv()
 PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH", "public.pem")
+TOKEN_PERIOD_SECONDS = int(os.getenv("TOKEN_PERIOD_SECONDS", "3600"))
 
 
 class ThingToken:
@@ -37,13 +38,13 @@ class ThingToken:
             str: The existing (and still valid) JWT or a newly generated JWT
         """
         # Get current time
-        current_time = datetime.datetime.utcnow().timestamp()
-        if self.exp is None or self.exp <= current_time:
+        current_time = time()
+        if self.exp is None or self.exp < current_time:
             # If token expired, refresh it
             return self.refresh()
         return self.jwt
 
-    def refresh(self, duration_sec: int = 36000) -> str:
+    def refresh(self, duration_sec: int = TOKEN_PERIOD_SECONDS) -> str:
         """Use the private key to generate a new JWT.
 
         Args:
@@ -56,7 +57,7 @@ class ThingToken:
         with open(self.private_key_path, "rb") as fh:
             signing_key = jwk_from_pem(fh.read())
         # Get current time
-        current_time = datetime.datetime.utcnow().timestamp()
+        current_time = time()
         # Build token message
         self.iat = int(current_time)
         self.exp = int(current_time + duration_sec)

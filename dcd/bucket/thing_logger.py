@@ -59,7 +59,8 @@ class ThingLogger:
 
     def data(self, property: Property):
         try:
-            file = open(self.data_folder + "/" + property.property_id + "_" + str(time.strftime("%Y-%m-%d_%H")) + ".csv", "a")
+            property_id = property.property_id.replace("dcd:properties:","")
+            file = open(self.data_folder + "/" + property_id + "_" + str(time.strftime("%Y-%m-%d_%H")) + ".csv", "a")
             for val in property.values:
                 file.write(",".join(str(x) for x in val))
                 file.write("\n")
