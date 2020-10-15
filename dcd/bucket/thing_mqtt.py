@@ -61,6 +61,9 @@ class ThingMQTT:
         global mqtt_client
         mqtt_client = self.mqtt_client
         self.mqtt_client.on_connect = self.__on_mqtt_connect
+
+        self.mqtt_client.message_callback_add("/things/" + self.thing.thing_id + "/log", self.__log)
+        self.mqtt_client.message_callback_add("/things/" + self.thing.thing_id + "/reply", self.__reply)
         self.mqtt_client.on_message = self.__on_mqtt_message
 
         # self.mqtt_client.on_subscribe = self.on_mqtt_subscribe
@@ -88,7 +91,7 @@ class ThingMQTT:
 
     def read(self):
         if self.mqtt_connected:
-            topic = "/things/" + self.thing.thing_id + "/read"
+            topic = "/things/" + self.thing.thing_id
             requestId = random.randint(0, 100)
             self.logger.debug(
                 "[mqtt] Reading thing, response will come via /reply (request id: " + str(requestId) + ")")
@@ -128,7 +131,7 @@ class ThingMQTT:
                 If media type property, the path to the file to upload. Defaults to None.
         """
         requestId = random.randint(0, 100)
-        topic = "/things/" + self.thing.thing_id + "/properties/" + prop.property_id + "/update"
+        topic = "/things/" + self.thing.thing_id + "/properties/" + prop.property_id
         self.logger.debug("[mqtt] Updating property " + prop.property_id + "...")
         self.__publish(topic, json.dumps(
             {"requestId": requestId, "property": prop.value_to_json()}))
@@ -152,39 +155,37 @@ class ThingMQTT:
         self.mqtt_client.subscribe(
             [("/things/" + self.thing.thing_id + "/log", 1), ("/things/" + self.thing.thing_id + "/reply", 1)])
 
+    def __log(self, client, userdata, msg):
+        jsonMsg = json.loads(msg.payload)
+        if jsonMsg["level"] == "error":
+            self.logger.error("[mqtt-bucket] " + str(jsonMsg))
+        elif jsonMsg["level"] == "info":
+            self.logger.info("[mqtt-bucket] " + str(jsonMsg))
+        elif jsonMsg["level"] == "debug":
+            self.logger.debug("[mqtt-bucket] " + str(jsonMsg))
+
+    def __reply(self, client, userdata, msg):
+        jsonMsg = json.loads(msg.payload)
+        self.logger.debug(
+            "[mqtt] Received response on /reply (request id: " + str(jsonMsg["requestId"]) + ")")
+        if jsonMsg["thing"] is not None:
+            self.logger.debug(
+                "Loading thing details received from Bucket...")
+            self.thing.from_json(jsonMsg["thing"])
+            self.logger.debug(json.dumps(self.thing.to_json()))
+        elif jsonMsg["property"] is not None:
+            self.logger.debug("Adding new property " +
+                                jsonMsg["property"].id + "...")
+            created_property = Property(json_property=jsonMsg["property"])
+            created_property.belongs_to(self)
+            self.thing.properties[created_property.property_id] = created_property
+            return created_property
+
     def __on_mqtt_message(self, client, userdata, msg):
         """
         The callback for when a PUBLISH message is received from the server.
         """
-        if msg.topic.endswith("/log"):
-            jsonMsg = json.loads(msg.payload)
-            if jsonMsg["level"] == "error":
-                self.logger.error("[mqtt-bucket] " + str(jsonMsg))
-            elif jsonMsg["level"] == "info":
-                self.logger.info("[mqtt-bucket] " + str(jsonMsg))
-            elif jsonMsg["level"] == "debug":
-                self.logger.debug("[mqtt-bucket] " + str(jsonMsg))
-
-        elif msg.topic.endswith("/reply"):
-            jsonMsg = json.loads(msg.payload)
-            self.logger.debug(
-                "[mqtt] Received response on /reply (request id: " + str(jsonMsg["requestId"]) + ")")
-            if jsonMsg["thing"] is not None:
-                self.logger.debug(
-                    "Loading thing details received from Bucket...")
-                self.thing.from_json(jsonMsg["thing"])
-                self.logger.debug(json.dumps(self.thing.to_json()))
-            elif jsonMsg["property"] is not None:
-                self.logger.debug("Adding new property " +
-                                  jsonMsg["property"].id + "...")
-                created_property = Property(json_property=jsonMsg["property"])
-                created_property.belongs_to(self)
-                self.thing.properties[created_property.property_id] = created_property
-                return created_property
-
-        else:
-            self.logger.info("[mqtt] " + msg.topic +
-                             ": " + msg.payload.toString())
+        self.logger.info("[mqtt] " + msg.topic + ": " + msg.payload.decode("utf-8"))
 
 
 def mqtt_result_code(rc):

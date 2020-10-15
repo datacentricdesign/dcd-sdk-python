@@ -5,7 +5,6 @@ import requests
 
 verifyCert = True
 
-
 class ThingHTTP:
     """Handle Bucket interaction for a Thing via HTTP"""
 
@@ -129,6 +128,11 @@ class ThingHTTP:
         json_thing = requests.get(uri, headers=self.__get_headers(),
                                   verify=verifyCert).json()
         return self.thing.from_json(json_thing)
+
+    def find_shared_properties(self, group) -> [Property]:
+        uri = f"{self.http_uri}/things/{self.thing.thing_id}/properties?sharedWith=" + group
+        return requests.get(uri, headers=self.__get_headers(),
+                                  verify=verifyCert).json()
 
     def create_property(self, name: str, type_id: str):
         """Create a new property on Bucket.

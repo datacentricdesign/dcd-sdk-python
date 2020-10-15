@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from enum import Enum
 
+from typing import Callable
+
 # from ..thing import Thing
 
 
@@ -21,7 +23,7 @@ class Property:
                  values: dict = (),
                  thing=None):
 
-        self.subscribers = []
+        self.update_handler = None
         self.thing = thing
 
         if json_property is not None:
@@ -60,6 +62,8 @@ class Property:
             p["typeId"] = self.type_id
         if self.values is not None and len(self.values) > 0:
             p["values"] = self.values
+        if self.thing is not None and self.thing.id is not None:
+            p["thing_id"] = self.thing.id
         return p
 
     def value_to_json(self) -> dict:
@@ -112,8 +116,23 @@ class Property:
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
         self.thing.read_property(self.property_id, from_ts, to_ts)
 
-    def subscribe(self, uri: str):
-        self.subscribers.append(uri)
+    def set_update_handler(self, handler):
+        topic = "/things/" + self.thing.thing_id + "/properties/" + self.property_id
+        self.update_handler = handler
+        if handler is None:
+            self.thing.mqtt_client.message_callback_remove(topic)
+        else:
+            self.thing.mqtt_client.message_callback_add(topic, self.__mqtt_update_handler)
+        
+
+    def __mqtt_update_handler(self, client, userdata, msg):
+        self.logger.debug("[Property mqtt] Received update")
+        if self.update_handler is not None:
+            jsonMsg = json.loads(msg.payload)
+            self.update_handler(self, msg.payload)
+        else:
+            self.logger.debug("[Property mqtt] No handler for subscribed update.")
+
 
     def align_values_to(self, prop2):
         """
