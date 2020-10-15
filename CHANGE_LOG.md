@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2020-10-15
+
+### Added
+- Management of shared properties
 
 ## [0.1.12] - 2020-09-25
 
