@@ -56,6 +56,7 @@ class Thing:
         """
 
         self.properties = []
+        self.video_recorder = None
         if json_thing is not None:
             self.from_json(json_thing)
         else:
@@ -73,20 +74,19 @@ class Thing:
             self.created_at = None
             self.updated_at = None
 
-        self.logger = ThingLogger(self)
-        self.video_recorder = None
+            self.logger = ThingLogger(self)
 
-        # If there is a thing id, try to connect
-        if self.thing_id is not None:
-            self.token = ThingToken(
-                private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI)
-            self.http = ThingHTTP(self, HTTP_API_URI)
+            # If there is a thing id, try to connect
+            if self.thing_id is not None:
+                self.token = ThingToken(
+                    private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI)
+                self.http = ThingHTTP(self, HTTP_API_URI)
 
-            # Loads all thing's details
-            if self.http.is_connected():
-                self.ip_address_property = IPAddressProperty(self.logger, self)
-                # Start the MQTT connection
-                self.mqtt = ThingMQTT(self)
+                # Loads all thing's details
+                if self.http.is_connected():
+                    self.ip_address_property = IPAddressProperty(self.logger, self)
+                    # Start the MQTT connection
+                    self.mqtt = ThingMQTT(self)
 
     def to_json(self):
         t = {}
@@ -125,10 +125,11 @@ class Thing:
 
                 self.properties = {}
 
-                for json_property in json_thing["properties"]:
-                    prop = Property(json_property=json_property)
-                    prop.belongs_to(self)
-                    self.properties[prop.property_id] = prop
+                if "properties" in json_thing:
+                    for json_property in json_thing["properties"]:
+                        prop = Property(json_property=json_property)
+                        prop.belongs_to(self)
+                        self.properties[prop.property_id] = prop
                 return True
         return False
 
@@ -149,6 +150,24 @@ class Thing:
         self.logger.debug(
             "Property " + property_name_to_find + " was not found.")
         return None
+
+    def find_shared_properties(self, group = "*") -> [Property]:
+        """Search for properties that are accessible by the Thing.
+
+        Args:
+            group (str, optional): [description]. Defaults to "*", fetching for all groups.
+
+        Returns:
+            [Property]: Shared properties accessible by the Thing.
+        """
+        json_properties = self.http.find_shared_properties(group)
+        properties = []
+        if "status" not in json_properties:
+            for json_prop in json_properties:
+                prop = Property(json_property=json_prop)
+                prop.belongs_to(Thing(json_thing=json_prop["thing"]))
+                properties.append(prop)
+        return properties
 
     def find_or_create_property(self, property_name: str, type_id: str) -> Property:
         """Search for a property in thing by name, create it if not found & return it.
@@ -204,4 +223,7 @@ class Thing:
         self.http.read_property(property_id, from_ts, to_ts)
 
     def describe(self):
+        """
+        Prints formatted JSON with the details of the Thing
+        """
         print(json.dumps(self.to_json(), indent=4, sort_keys=True))
