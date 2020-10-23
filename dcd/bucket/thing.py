@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import json
 import os
+from datetime import datetime
 
 from .thing_token import ThingToken
 from .thing_mqtt import ThingMQTT
@@ -44,7 +45,8 @@ class Thing:
     def __init__(self,
                  thing_id: str = None,
                  private_key_path: str = None,
-                 json_thing: dict = None):
+                 json_thing: dict = None,
+                 connect = True):
         """
         Constructs a Thing, generating an JSON Web token, attempting a connection via HTTP to read the Thing deails from Bucket, connecting to MQTT
 
@@ -58,6 +60,7 @@ class Thing:
         """
 
         self.properties = []
+        self.shared_properties = []
         self.video_recorder = None
         if json_thing is not None:
             self.from_json(json_thing)
@@ -93,9 +96,10 @@ class Thing:
 
                 # Loads all thing's details
                 if self.http.is_connected():
-                    self.ip_address_property = IPAddressProperty(self.logger, self)
-                    # Start the MQTT connection
-                    self.mqtt = ThingMQTT(self)
+                    if (connect):
+                        self.ip_address_property = IPAddressProperty(self.logger, self)
+                    # Init the MQTT
+                    self.mqtt = ThingMQTT(self, connect=connect)
 
     def to_json(self):
         t = {}
@@ -142,6 +146,18 @@ class Thing:
                 return True
         return False
 
+    def get_property(self, property_id):
+        for property in self.properties:
+            if self.properties[property].property_id == property_id:
+                return self.properties[property]
+        return None
+    
+    def get_shared_property(self, property_id):
+        for property in self.shared_properties:
+            if property.property_id == property_id:
+                return property
+        return None
+        
     def find_property_by_name(self, property_name_to_find: str) -> Property:
         """Search for a property in thing by name
 
@@ -176,6 +192,7 @@ class Thing:
                 prop = Property(json_property=json_prop)
                 prop.belongs_to(Thing(json_thing=json_prop["thing"]))
                 properties.append(prop)
+            self.shared_properties = properties
         return properties
 
     def find_or_create_property(self, property_name: str, type_id: str) -> Property:
@@ -211,7 +228,7 @@ class Thing:
         else:
             self.http.update_property(prop, file_name=file_name)
 
-    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None) -> Property:
+    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None, time_interval = None, time_fct = None, fill = None) -> Property:
         """Read the details of a property from Bucket
 
         Args:
@@ -229,7 +246,14 @@ class Thing:
         Returns:
             Property: The property with its details and values.
         """
-        self.http.read_property(property_id, from_ts, to_ts)
+        DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+        if type(from_ts) is str:
+            from_ts = datetime.timestamp(
+                datetime.strptime(from_ts, DATE_FORMAT)) * 1000
+        if type(to_ts) is str:
+            to_ts = datetime.timestamp(
+                datetime.strptime(to_ts, DATE_FORMAT)) * 1000
+        return self.http.read_property(property_id, from_ts, to_ts, time_interval, time_fct, fill)
 
     def describe(self):
         """

@@ -96,7 +96,7 @@ class Property:
 
         self.thing.update_property(self, file_name)
 
-    def read(self, from_ts = None, to_ts = None):
+    def read(self, from_ts = None, to_ts = None, time_interval = None, time_fct = None):
         """Read the details of a property from Bucket
 
         Args:
@@ -108,13 +108,13 @@ class Property:
             Property: The property with its details and values.
         """
         DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-        if type(from_ts) is "string":
+        if type(from_ts) is str:
             from_ts = datetime.timestamp(
                 datetime.strptime(from_ts, DATE_FORMAT)) * 1000
-        if type(to_ts) is "string":
+        if type(to_ts) is str:
             to_ts = datetime.timestamp(
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
-        self.thing.read_property(self.property_id, from_ts, to_ts)
+        self.thing.read_property(self.property_id, from_ts, to_ts, time_interval, time_fct)
 
     def set_update_handler(self, handler):
         topic = "/things/" + self.thing.thing_id + "/properties/" + self.property_id

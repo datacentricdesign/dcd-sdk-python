@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2020-10-23
+
+### Added
+- `connect` param on Thing for loading Thing without connecting MQTT
+- fixes on read property so that it works for both properties and shared properties
+
 ## [0.1.13] - 2020-10-15
 
 ### Added

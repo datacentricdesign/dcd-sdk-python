@@ -37,7 +37,7 @@ class ThingHTTP:
         """
         return self.connected
 
-    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None) -> Property:
+    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None, time_interval = None, time_fct = None, fill = None) -> Property:
         """Read the details of a property from Bucket
 
         Args:
@@ -55,21 +55,32 @@ class ThingHTTP:
         Returns:
             Property: The property with its details and values.
         """
-        prop = self.thing.properties[property_id]
-        if prop is not None:
-            uri = f"{self.http_uri}/things/{self.thing.thing_id}/properties/{property_id}"
-            if from_ts is not None and to_ts is not None:
-                uri += "?from=" + str(from_ts) + "&to=" + str(to_ts)
-            json_result = requests.get(
-                uri, headers=self.__get_headers(), verify=verifyCert).json()
-
-            if json_result["property"] is not None:
-                prop.from_json(json_result["property"])
-                return prop
+        # Look first in the properties of the Thing
+        prop = self.thing.get_property(property_id)
+        if prop is None:
+            prop = self.thing.get_shared_property(property_id)
+        if prop is None:
+            # Still not found, trigger an exception
             raise ValueError(
-                f"read_property() - unknown response: {json_result}")
+                f"Property id '{property_id}' not part of Thing '{self.thing.thing_id}' nor shared with this Thing. Did you call read_thing() first?")
+
+
+        uri = f"{self.http_uri}/things/{prop.thing.id}/properties/{property_id}"
+
+        if from_ts is not None and to_ts is not None:
+            uri += "?from=" + str(from_ts) + "&to=" + str(to_ts)
+            if time_interval is not None and time_fct is not None:
+                uri += "&timeInterval=" + time_interval + "&fctInterval=" + time_fct
+                if fill is not None:
+                    uri +=  "&fill=" + fill
+        json_result = requests.get(
+            uri, headers=self.__get_headers(), verify=verifyCert).json()
+
+        if "id" in json_result:
+            prop.from_json(json_result)
+            return prop
         raise ValueError(
-            f"Property id '{property_id}' not part of Thing '{self.thing.thing_id}'. Did you call read_thing() first?")
+            f"read_property() - unknown response: {json_result}")
 
     def update_property(self, prop: Property, file_name: str = None) -> int:
         """Update the values of a property on Bucket

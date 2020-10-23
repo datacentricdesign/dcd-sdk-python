@@ -34,7 +34,7 @@ MQTT_SECURED = os.getenv("MQTT_SECURED", "True") == "True"
 
 class ThingMQTT:
 
-    def __init__(self, thing, DigiCertCA = "DigicertCA"):
+    def __init__(self, thing, DigiCertCA = "DigicertCA", connect = True):
         """Create the MQTT link between the Thing and its digital twin on Bucket
 
         Args:
@@ -47,9 +47,10 @@ class ThingMQTT:
         self.mqtt_client = None
         self.connected = False 
         
-        self.thread_mqtt = Thread(target=self.init)
-        self.thread_mqtt.start()       
-        self.DigiCertCA = DigiCertCA
+        if (connect):
+            self.thread_mqtt = Thread(target=self.init)
+            self.thread_mqtt.start()       
+            self.DigiCertCA = DigiCertCA
 
     def is_connected(self):
         return self.connected
@@ -137,7 +138,8 @@ class ThingMQTT:
             {"requestId": requestId, "property": prop.value_to_json()}))
 
     def __publish(self, topic: str, payload: str):
-        self.mqtt_client.publish(topic, payload)
+        if (self.connected):
+            self.mqtt_client.publish(topic, payload)
 
     def __on_mqtt_connect(self, client, userdata, flags, rc):
         """
