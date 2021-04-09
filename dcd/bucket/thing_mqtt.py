@@ -47,7 +47,7 @@ class ThingMQTT:
         self.mqtt_client = None
         self.connected = False 
         
-        if (connect):
+        if connect:
             self.thread_mqtt = Thread(target=self.init)
             self.thread_mqtt.start()       
             self.DigiCertCA = DigiCertCA
@@ -138,7 +138,7 @@ class ThingMQTT:
             {"requestId": requestId, "property": prop.value_to_json()}))
 
     def __publish(self, topic: str, payload: str):
-        if (self.connected):
+        if self.connected:
             self.mqtt_client.publish(topic, payload)
 
     def __on_mqtt_connect(self, client, userdata, flags, rc):

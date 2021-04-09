@@ -45,6 +45,7 @@ class Thing:
     def __init__(self,
                  thing_id: str = None,
                  private_key_path: str = None,
+                 private_key: str = None,
                  json_thing: dict = None,
                  connect = True):
         """
