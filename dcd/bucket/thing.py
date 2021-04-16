@@ -13,6 +13,8 @@ load_dotenv()
 THING_ID = os.getenv("THING_ID", None)
 HTTP_API_URI = os.getenv(
     "HTTP_API_URI", "https://dwd.tudelft.nl:443/bucket/api")
+TOKEN_ALGO = os.getenv(
+    "TOKEN_ALGO", "RS256")
 
 
 class Thing:
@@ -79,7 +81,7 @@ class Thing:
             # If there is a thing id, try to connect
             if self.thing_id is not None:
                 self.token = ThingToken(
-                    private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI)
+                    private_key_path, self.thing_id, HTTP_API_URI, HTTP_API_URI, algorithm=TOKEN_ALGO)
                 self.http = ThingHTTP(self, HTTP_API_URI)
 
                 # Loads all thing's details
