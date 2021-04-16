@@ -1,5 +1,6 @@
 requests
-jwt
+pyjwt
 python-dotenv
 asyncio
 paho-mqtt
+cryptography

@@ -2,11 +2,7 @@ import datetime
 import os
 from dotenv import load_dotenv
 
-from jwt import (
-    JWT,
-    jwk_from_dict,
-    jwk_from_pem,
-)
+import jwt
 
 load_dotenv()
 PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", "private.pem")
@@ -16,7 +12,7 @@ PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH", "public.pem")
 class ThingToken:
     """Handle JSON web token for the Thing authentication"""
 
-    def __init__(self, private_key_path: str, subject: str, issuer: str, audience: str):
+    def __init__(self, private_key_path: str, subject: str, issuer: str, audience: str, algorithm = "RS256"):
         """Constructor
 
         Args:
@@ -30,6 +26,7 @@ class ThingToken:
         self.issuer = issuer
         self.audience = audience
         self.exp = None
+        self.algorithm=algorithm
 
     def get_token(self) -> str:
         """Check if the current JWT is still valid, refresh it if necessary and returns it.
@@ -55,7 +52,7 @@ class ThingToken:
         """
         # Read private key from file
         with open(self.private_key_path, "rb") as fh:
-            signing_key = jwk_from_pem(fh.read())
+            signing_key = fh.read()
         # Get current time
         current_time = datetime.datetime.utcnow().timestamp()
         # Build token message
@@ -68,16 +65,16 @@ class ThingToken:
             "iat": self.iat,
             "exp": self.exp
         }
-        self.jwt = JWT().encode(payload, signing_key, "RS256")
+        self.jwt = jwt.encode(payload, signing_key, algorithm=self.algorithm)
         return self.jwt
 
-    def decode(self, public_key_path: str = None, jwt: str = None) -> dict:
+    def decode(self, public_key_path: str = None, jwt_token: str = None) -> dict:
         """Decode a JWT, revealing the dictionary of its values
 
         Args:
             public_key_path : str, optional
                 The path to the public key. If none provided, looking at PUBLIC_KEY_PATH environment variable, or use './public.pem' as default. Defaults to None.
-            jwt : str, optional
+            jwt_token : str, optional
                 String representing the JSON web token. If none provided, taking the one from the class Defaults to None.
 
         Returns:
@@ -88,8 +85,8 @@ class ThingToken:
         if public_key_path is not None:
             key = public_key_path
         with open(key, "rb") as fh:
-            verifying_key = jwk_from_pem(fh.read())
-        if (jwt is not None):
-            return JWT().decode(jwt, verifying_key)
+            verifying_key = fh.read()
+        if (jwt_token is not None):
+            return jwt.decode(jwt_token, verifying_key, algorithms=[self.algorithm], audience=self.audience)
         else:
-            return JWT().decode(self.jwt, verifying_key)
+            return jwt.decode(self.jwt, verifying_key, algorithms=[self.algorithm], audience=self.audience)
