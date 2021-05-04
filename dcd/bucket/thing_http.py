@@ -169,7 +169,7 @@ class ThingHTTP:
             return None
         else:
             created_property = Property(json_property=response.json())
-            created_property.belongs_to(self)
+            created_property.belongs_to(self.thing)
             self.thing.properties[created_property.property_id] = created_property
             return created_property
 
