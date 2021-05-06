@@ -84,7 +84,7 @@ your Thing on Bucket, it has only an id, a name and a type.
 
 .. code-block:: python
 
-    print(my_thing.to_json())
+    print(my_thing.describe())
 
 Let's create a property 'My Python accelerometer'. The method find_or_create()
 looks for an existing property with this name. If none is found, it creates a
@@ -100,7 +100,7 @@ The type also contains the dimensions, 3 in the case of an accelerometer.
 
 .. code-block:: python
 
-    print(my_property.to_json())
+    print(my_property.describe())
 
 We are ready to send data. In the code below we create a function that generates
 an array with 3 random values and add them to the property. We then make an infinite
@@ -147,4 +147,4 @@ from the environment variables. To set these variables, create a file `.env` and
     PRIVATE_KEY_PATH=/path/to/private.pem
 
 
-The full example can be found `Here <https://github.com/datacentricdesign/dcd-sdk-python/blob/master/dcd/examples.py>`_
+The full example can be found `Here <https://github.com/datacentricdesign/dcd-sdk-python/blob/master/examples.py>`_
