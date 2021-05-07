@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- tried to improve pypi project description
+
 ## [0.1.17] - 2021-05-07
 
 ### Fixed

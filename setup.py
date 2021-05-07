@@ -3,8 +3,11 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open("LICENSE", "r", encoding="utf-8") as f:
-    sdk_license = f.read()
+# 'setup.py publish' shortcut.
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist bdist_wheel')
+    os.system('twine upload dist/*')
+    sys.exit()
 
 setup(
     name="dcd-sdk",
@@ -15,9 +18,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/datacentricdesign/dcd-sdk-python",
-    license=sdk_license,
+    license='MIT',
     packages=find_packages(exclude=("tests", "docs")),
-    data_files = [("", ["LICENSE","requirements.txt"])],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Science/Research",
