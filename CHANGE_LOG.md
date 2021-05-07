@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- long description on Pipy
+
+## [0.1.16] - 2021-05-06
+
+### Added
+- support for elliptic keys
+
+### Fixed
+- thing association in create_property [Issue 8](https://github.com/datacentricdesign/dcd-sdk-python/issues/8#issue-875277794)
+
 ## [0.1.15] - 2020-10-23
 
 ### Added
