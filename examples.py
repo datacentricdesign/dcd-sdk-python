@@ -14,14 +14,14 @@ import os
 # The thing ID and access token
 load_dotenv()
 THING_ID = os.environ["THING_ID"]
-PRIVATE_KEY = os.environ["PRIVATE_KEY"]
+PRIVATE_KEY_PATH = os.environ["PRIVATE_KEY_PATH"]
 
 from dcd.bucket.thing import Thing
 
 def main():
     # Instantiate a thing with its credential
     # By default, looking into .env for THING_ID and PRIVATE_KEY_PATH (default "./private.pem")
-    my_thing = Thing(thing_id=THING_ID, private_key=PRIVATE_KEY)
+    my_thing = Thing(thing_id=THING_ID, private_key_path=PRIVATE_KEY_PATH)
 
     # Instead you could put your credentials in the code (not recommended)
     # my_thing = Thing(thing_id="dcd:things:...", private_key_path="path/to/private.pem")
