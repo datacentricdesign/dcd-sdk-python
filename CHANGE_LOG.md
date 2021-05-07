@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17] - 2021-05-07
+
 ### Fixed
 - long description on Pipy
+- mqtt connected status
 
 ## [0.1.16] - 2021-05-06
 
