@@ -91,7 +91,7 @@ class ThingMQTT:
         self.mqtt_client.loop_forever()
 
     def read(self):
-        if self.mqtt_connected:
+        if self.is_connected():
             topic = "/things/" + self.thing.thing_id
             requestId = random.randint(0, 100)
             self.logger.debug(
@@ -101,7 +101,7 @@ class ThingMQTT:
 
     def create_property(self, name: str, type_id: str):
         my_property = Property(name=name, type_id=type_id)
-        if self.mqtt_connected:
+        if self.is_connected():
             topic = "/things/" + self.thing.thing_id + "/properties/create"
             requestId = random.randint(0, 100)
             self.logger.debug(
@@ -138,11 +138,10 @@ class ThingMQTT:
             {"requestId": requestId, "property": prop.value_to_json()}))
 
     def __publish(self, topic: str, payload: str):
-        if self.connected:
+        if self.is_connected():
             self.mqtt_client.publish(topic, payload)
         else:
-            #TODO: rewrite error to match style of other errors
-            self.logger.error("[mqtt] not connected, did not attempt to publish")
+            self.logger.warn("[mqtt] " + topic + ": not connected, did not attempt to publish.")
 
     def __on_mqtt_connect(self, client, userdata, flags, rc):
         """
@@ -151,7 +150,6 @@ class ThingMQTT:
         """
         self.logger.info("[mqtt] " + mqtt_result_code(rc))
 
-        self.mqtt_connected = True
         # TODO: look at why some users are not able to use MQTT without this line and some are
         self.connected = True
 
