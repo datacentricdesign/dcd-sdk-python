@@ -140,6 +140,9 @@ class ThingMQTT:
     def __publish(self, topic: str, payload: str):
         if self.connected:
             self.mqtt_client.publish(topic, payload)
+        else:
+            #TODO: rewrite error to match style of other errors
+            self.logger.error("[mqtt] not connected, did not attempt to publish")
 
     def __on_mqtt_connect(self, client, userdata, flags, rc):
         """
@@ -149,6 +152,8 @@ class ThingMQTT:
         self.logger.info("[mqtt] " + mqtt_result_code(rc))
 
         self.mqtt_connected = True
+        # TODO: look at why some users are not able to use MQTT without this line and some are
+        self.connected = True
 
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
