@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+import sys, os
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
@@ -11,7 +11,7 @@ if sys.argv[-1] == 'publish':
 
 setup(
     name="dcd-sdk",
-    version="0.1.17",
+    version="0.1.18",
     author="Data-Centric Design Lab",
     author_email="lab@datacentricdesign.org",
     description="Python SDK for the tools of the Data-Centric Design Lab",

@@ -1,4 +1,5 @@
 
+from typing import List
 from .properties.property import Property
 from .thing_logger import ThingLogger
 import requests
@@ -140,7 +141,7 @@ class ThingHTTP:
                                   verify=verifyCert).json()
         return self.thing.from_json(json_thing)
 
-    def find_shared_properties(self, group) -> [Property]:
+    def find_shared_properties(self, group) -> List[Property]:
         uri = f"{self.http_uri}/things/{self.thing.thing_id}/properties?sharedWith=" + group
         return requests.get(uri, headers=self.__get_headers(),
                                   verify=verifyCert).json()

@@ -1,3 +1,4 @@
+from typing import List
 from dotenv import load_dotenv
 import json
 import os
@@ -179,7 +180,7 @@ class Thing:
             "Property " + property_name_to_find + " was not found.")
         return None
 
-    def find_shared_properties(self, group = "*") -> [Property]:
+    def find_shared_properties(self, group = "*") -> List[Property]:
         """Search for properties that are accessible by the Thing.
 
         Args:
