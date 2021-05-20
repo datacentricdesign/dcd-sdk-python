@@ -45,12 +45,12 @@ class ThingMQTT:
         self.logger = thing.logger
 
         self.mqtt_client = None
-        self.connected = False 
+        self.connected = False    
+        self.DigiCertCA = DigiCertCA
         
         if connect:
             self.thread_mqtt = Thread(target=self.init)
-            self.thread_mqtt.start()       
-            self.DigiCertCA = DigiCertCA
+            self.thread_mqtt.start()    
 
     def is_connected(self):
         return self.connected
