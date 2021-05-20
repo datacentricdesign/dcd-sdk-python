@@ -226,7 +226,7 @@ class Thing:
                 If media type property, the path to the file to upload. Defaults to None.
         """
         self.logger.data(prop)
-        if file_name is None and self.mqtt.is_connected:
+        if file_name is None and self.mqtt.is_connected():
             self.mqtt.update_property(prop, file_name=file_name)
         else:
             self.http.update_property(prop, file_name=file_name)
