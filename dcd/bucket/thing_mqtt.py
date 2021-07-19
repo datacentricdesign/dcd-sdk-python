@@ -62,6 +62,7 @@ class ThingMQTT:
         global mqtt_client
         mqtt_client = self.mqtt_client
         self.mqtt_client.on_connect = self.__on_mqtt_connect
+        self.mqtt_client.on_disconnect = self.__on_mqtt_disconnect
 
         self.mqtt_client.message_callback_add("/things/" + self.thing.thing_id + "/log", self.__log)
         self.mqtt_client.message_callback_add("/things/" + self.thing.thing_id + "/reply", self.__reply)
@@ -150,15 +151,26 @@ class ThingMQTT:
         """
         self.logger.info("[mqtt] " + mqtt_result_code(rc))
 
-        # TODO: look at why some users are not able to use MQTT without this line and some are
-        self.connected = True
+        if (rc == 5):
+            self.connected = False
+            self.logger.info('[mqtt] Token expired, refresh token')
+            self.mqtt_client.disconnect()
+            self.init()
+        else:
+            # TODO: look at why some users are not able to use MQTT without this line and some are
+            self.connected = True
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
+            # Subscribing in on_connect() means that if we lose the connection and
+            # reconnect then subscriptions will be renewed.
 
-        # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
-        self.mqtt_client.subscribe(
-            [("/things/" + self.thing.thing_id + "/log", 1), ("/things/" + self.thing.thing_id + "/reply", 1)])
+            # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
+            self.mqtt_client.subscribe(
+                [("/things/" + self.thing.thing_id + "/log", 1), ("/things/" + self.thing.thing_id + "/reply", 1)])
+
+
+    def __on_mqtt_disconnect(self, client, userdata, rc):
+        if rc != 0:
+            self.logger.error("Unexpected disconnection.")
 
     def __log(self, client, userdata, msg):
         jsonMsg = json.loads(msg.payload)
