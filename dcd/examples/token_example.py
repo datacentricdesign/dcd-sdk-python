@@ -9,7 +9,7 @@ import os
 # The thing ID and access token
 load_dotenv()
 THING_ID = os.environ["THING_ID"]
-HTTP_API_URI = os.getenv("HTTP_URI", "https://dwd.tudelft.nl:443/bucket/api")
+HTTP_API_URI = os.getenv("HTTP_API_URI", "https://dwd.tudelft.nl:443/bucket/api")
 
 token = ThingToken("private.pem", THING_ID, HTTP_API_URI, HTTP_API_URI)
 
