@@ -2,6 +2,7 @@ from typing import List
 from dotenv import load_dotenv
 import json
 import os
+from os.path import join
 from datetime import datetime
 
 from .thing_token import ThingToken
@@ -11,7 +12,8 @@ from .thing_logger import ThingLogger
 from .properties.property import Property
 from .properties.ip_address_property import IPAddressProperty
 
-load_dotenv()
+dotenv_path = join(os.getcwd(), '.env')
+load_dotenv(dotenv_path)
 THING_ID = os.getenv("THING_ID", None)
 PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", None)
 HTTP_API_URI = os.getenv(

@@ -9,6 +9,8 @@ import paho.mqtt.client as mqtt
 import ssl
 import random
 import json
+from os.path import join
+from dotenv import load_dotenv
 from dcd.bucket.properties.property import Property
 
 
@@ -27,7 +29,8 @@ def keyboardInterruptHandler(signal, frame):
 
 signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
-load_dotenv()
+dotenv_path = join(os.getcwd(), '.env')
+load_dotenv(dotenv_path)
 MQTT_HOST = os.getenv("MQTT_HOST", "dwd.tudelft.nl")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
 MQTT_SECURED = os.getenv("MQTT_SECURED", "True") == "True"

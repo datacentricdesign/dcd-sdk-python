@@ -11,7 +11,7 @@ if sys.argv[-1] == 'publish':
 
 setup(
     name="dcd-sdk",
-    version="0.1.18",
+    version="0.1.21",
     author="Data-Centric Design Lab",
     author_email="lab@datacentricdesign.org",
     description="Python SDK for the tools of the Data-Centric Design Lab",
@@ -31,11 +31,11 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "markdown",
         "requests",
-        "jwt",
+        "pyjwt",
         "python-dotenv",
         "asyncio",
         "paho-mqtt",
+        "cryptography"
     ],
 )

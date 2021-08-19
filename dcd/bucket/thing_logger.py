@@ -2,8 +2,13 @@
 import logging
 import os
 import time
+from os.path import join
+from dotenv import load_dotenv
 # from .thing import Thing
 from .properties.property import Property
+
+dotenv_path = join(os.getcwd(), '.env')
+load_dotenv(dotenv_path)
 
 class ThingLogger:
 

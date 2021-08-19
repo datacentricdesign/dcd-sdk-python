@@ -1,10 +1,13 @@
 from time import time
 import os
+from os.path import join
 from dotenv import load_dotenv
 
 import jwt
 
-load_dotenv()
+dotenv_path = join(os.getcwd(), '.env')
+load_dotenv(dotenv_path)
+PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH", "private.pem")
 PUBLIC_KEY_PATH = os.getenv("PUBLIC_KEY_PATH", "public.pem")
 TOKEN_PERIOD_SECONDS = int(os.getenv("TOKEN_PERIOD_SECONDS", "3600"))
 
@@ -21,7 +24,10 @@ class ThingToken:
             issuer (str): The issuer should be the uri to the Bucket api
             audience (str): The audience should be the uri to the Bucket api
         """
-        self.private_key_path = private_key_path
+        if private_key_path is not None:
+            self.private_key_path
+        else:
+            self.private_key_path = PRIVATE_KEY_PATH
         self.subject = subject
         self.issuer = issuer
         self.audience = audience

@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.21]
+
+- fixed .env access from inside the lib
+
+## [0.1.20]
+
+- align setup.py and requirement.txt
+
+## [0.1.19]
+
+- replaced jwt for pyjwt
+
 ## [0.1.18] - 2021-05-20
 
 - tried to improve pypi project description
