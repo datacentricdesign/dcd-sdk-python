@@ -137,9 +137,9 @@ class ThingHTTP:
             bool: True if succeeded in reading the Thing details from Bucket
         """
         uri = f"{self.http_uri}/things/{self.thing.thing_id}"
-        json_thing = requests.get(uri, headers=self.__get_headers(),
-                                  verify=verifyCert).json()
-        return self.thing.from_json(json_thing)
+        thing_result = requests.get(uri, headers=self.__get_headers(),
+                                  verify=verifyCert)
+        return self.thing.from_json(thing_result.json())
 
     def find_shared_properties(self, group) -> List[Property]:
         uri = f"{self.http_uri}/things/{self.thing.thing_id}/properties?sharedWith=" + group

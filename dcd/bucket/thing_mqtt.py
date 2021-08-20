@@ -167,8 +167,10 @@ class ThingMQTT:
             # reconnect then subscriptions will be renewed.
 
             # self.mqtt_client.subscribe([("/things/" + self.thing_id + "/#",1)])
-            self.mqtt_client.subscribe(
-                [("/things/" + self.thing.thing_id + "/log", 1), ("/things/" + self.thing.thing_id + "/reply", 1)])
+            self.mqtt_client.subscribe([
+                ("/things/" + self.thing.thing_id + "/log", 1),
+                ("/things/" + self.thing.thing_id + "/reply", 1)
+            ])
 
 
     def __on_mqtt_disconnect(self, client, userdata, rc):
