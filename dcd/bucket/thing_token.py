@@ -25,7 +25,7 @@ class ThingToken:
             audience (str): The audience should be the uri to the Bucket api
         """
         if private_key_path is not None:
-            self.private_key_path
+            self.private_key_path = private_key_path
         else:
             self.private_key_path = PRIVATE_KEY_PATH
         self.subject = subject
@@ -71,7 +71,10 @@ class ThingToken:
             "iat": self.iat,
             "exp": self.exp
         }
-        self.jwt = jwt.encode(payload, signing_key, algorithm=self.algorithm)
+        token = jwt.encode(payload, signing_key, algorithm=self.algorithm)
+        if isinstance(token,bytes):
+            token = token.decode('utf-8')
+        self.jwt = token
         return self.jwt
 
     def decode(self, public_key_path: str = None, jwt_token: str = None) -> dict:

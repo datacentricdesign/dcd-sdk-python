@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.26]
+
+- decode token when token is of type bytes (appearing as bytes on some platforms)
+
+## [0.1.23]
+
+- cast token as string (appearing as bytes on some platforms)
+
+## [0.1.22]
+
+- replace issuer [Bucket server] by [thingID] because the Python SDK generate its token
+
 ## [0.1.21]
 
 - fixed .env access from inside the lib
