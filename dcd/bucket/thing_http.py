@@ -133,10 +133,15 @@ class ThingHTTP:
         self.logger.debug("[http] " + str(prop.to_json()))
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
-        response = requests.put(url=url,
-                                files=files,
-                                data={'property': json.dumps(prop.to_json())},
-                                headers=self.__get_headers())
+        if (files is not None):
+            response = requests.put(url=url,
+                                    files=files,
+                                    data={'property': json.dumps(prop.to_json())},
+                                    headers=self.__get_headers())
+        else:
+            response = requests.put(url=url,
+                                    json=prop.to_json(),
+                                    headers=self.__get_headers())
 
         self.logger.debug("[http] " + str(response.status_code))
         self.logger.debug("[http] " + str(response.text))
