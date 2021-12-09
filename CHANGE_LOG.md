@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.28]
+
+- Added MQTT option to enable/disable mqtt
+
 ## [0.1.27]
 
 - Added the upload and download of media files with example

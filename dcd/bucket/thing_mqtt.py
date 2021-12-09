@@ -31,6 +31,7 @@ signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
 dotenv_path = join(os.getcwd(), '.env')
 load_dotenv(dotenv_path)
+MQTT = os.getenv("MQTT", "False") == "True"
 MQTT_HOST = os.getenv("MQTT_HOST", "dwd.tudelft.nl")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "8883"))
 MQTT_SECURED = os.getenv("MQTT_SECURED", "True") == "True"
@@ -51,7 +52,7 @@ class ThingMQTT:
         self.connected = False    
         self.DigiCertCA = DigiCertCA
         
-        if connect:
+        if connect and MQTT:
             self.thread_mqtt = Thread(target=self.init)
             self.thread_mqtt.start()    
 
