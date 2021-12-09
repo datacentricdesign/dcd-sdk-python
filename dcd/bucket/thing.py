@@ -261,6 +261,13 @@ class Thing:
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
         return self.http.read_property(property_id, from_ts, to_ts, time_interval, time_fct, fill)
 
+    def read_property_media(self, property_id, dimension_id, ts):
+        DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+        if type(ts) is str:
+            ts = datetime.timestamp(
+                datetime.strptime(ts, DATE_FORMAT)) * 1000
+        return self.http.read_property_media(property_id, dimension_id, ts)
+
     def describe(self):
         """
         Prints formatted JSON with the details of the Thing

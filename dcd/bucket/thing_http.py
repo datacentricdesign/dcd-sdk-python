@@ -1,4 +1,5 @@
 
+import json
 from typing import List
 from .properties.property import Property
 from .thing_logger import ThingLogger
@@ -83,6 +84,15 @@ class ThingHTTP:
         raise ValueError(
             f"read_property() - unknown response: {json_result}")
 
+    
+    def read_property_media(self, property_id, dimension_id, ts):
+        prop = self.thing.get_property(property_id)
+        uri = f"{self.http_uri}/things/{prop.thing.id}/properties/{property_id}/dimensions/{dimension_id}/timestamp/{ts}"
+
+        receive = requests.get(uri, headers=self.__get_headers(), verify=verifyCert)
+        return receive.content
+
+
     def update_property(self, prop: Property, file_name: str = None) -> int:
         """Update the values of a property on Bucket
 
@@ -96,26 +106,26 @@ class ThingHTTP:
             int: Status response code
         """
         files = None
-
         if file_name is not None:
+            file_name_lc = file_name.lower()
             self.logger.debug(
                 f"[http] Uploading {file_name} to property {self.thing.name}")
-            if file_name.endswith(".mp4"):
-                #  Uploading file of type video in files,
-                #  we create a dictionary that maps "video" to a tuple
-                #  (read only list) composed of extra data : name, file object
-                #  type of video (mp4 by default),
-                #  and expiration tag (also a dict)(?)
-                files = {"data": (file_name, open("./" + file_name, "rb"),
+            if file_name_lc.endswith(".mp4"):
+                files = {"video-mp4": (file_name_lc, open("./" + file_name, "rb"),
                                   "video/mp4", {"Expires": "0"})}
+            if file_name_lc.endswith(".mp3"):
+                files = {"audio-mp3": (file_name_lc, open("./" + file_name, "rb"),
+                                  "application/octet-stream", {"Expires": "0"})}
+            if file_name_lc.endswith(".jpg"):
+                files = {"image-jpg": (file_name_lc, open("./" + file_name, "rb"),
+                                  "image/jpeg", {"Expires": "0"})}
+            if file_name_lc.endswith(".png"):
+                files = {"image-png": (file_name_lc, open("./" + file_name, "rb"),
+                                  "image/png", {"Expires": "0"})}
             else:
                 self.logger.error("[http] File type not yet supported,"
                                   + "cancelling property update over HTTP")
                 return -1
-
-        jsonValues = {
-            "values": prop.values
-        }
 
         url = self.http_uri + "/things/" + self.thing.thing_id + \
             "/properties/" + prop.property_id
@@ -123,10 +133,13 @@ class ThingHTTP:
         self.logger.debug("[http] " + str(prop.to_json()))
         #  sending our post method to upload this file, using our authentication
         #  data dict is converted into a list for all the values of the property
-        response = requests.put(url=url, files=files,
-                                json=jsonValues, headers=self.__get_headers())
+        response = requests.put(url=url,
+                                files=files,
+                                data={'property': json.dumps(prop.to_json())},
+                                headers=self.__get_headers())
 
         self.logger.debug("[http] " + str(response.status_code))
+        self.logger.debug("[http] " + str(response.text))
         #  method, by the requests library
         return response.status_code
 

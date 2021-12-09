@@ -1,9 +1,6 @@
 import math
 import json
 from datetime import datetime
-from enum import Enum
-
-from typing import Callable
 
 # from ..thing import Thing
 
@@ -21,7 +18,7 @@ class Property:
                  property_type: dict = None,
                  json_property: dict = None,
                  values: dict = (),
-                 thing=None):
+                 thing = None):
 
         self.update_handler = None
         self.thing = thing
@@ -93,8 +90,12 @@ class Property:
 
         if self.type_id == "VIDEO" and file_name is None:
             raise ValueError("Missing file name for VIDEO property update.")
+        
+        if self.type_id == "IMAGE_PNG" and file_name is None:
+            raise ValueError("Missing file name for IMAGE_PNG property update.")
 
         self.thing.update_property(self, file_name)
+        return ts
 
     def read(self, from_ts = None, to_ts = None, time_interval = None, time_fct = None):
         """Read the details of a property from Bucket
@@ -115,6 +116,9 @@ class Property:
             to_ts = datetime.timestamp(
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
         self.thing.read_property(self.property_id, from_ts, to_ts, time_interval, time_fct)
+
+    def read_media(self, dimension_id, ts):
+        return self.thing.read_property_media(self.property_id, dimension_id, ts)
 
     def set_update_handler(self, handler):
         topic = "/things/" + self.thing.thing_id + "/properties/" + self.property_id
