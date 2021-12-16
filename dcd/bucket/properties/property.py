@@ -97,7 +97,7 @@ class Property:
         self.thing.update_property(self, file_name)
         return ts
 
-    def read(self, from_ts = None, to_ts = None, time_interval = None, time_fct = None):
+    def read(self, from_ts = None, to_ts = None, time_interval = None, time_fct = None, shared_with:str=None):
         """Read the details of a property from Bucket
 
         Args:
@@ -115,7 +115,7 @@ class Property:
         if type(to_ts) is str:
             to_ts = datetime.timestamp(
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
-        self.thing.read_property(self.property_id, from_ts, to_ts, time_interval, time_fct)
+        self.thing.read_property(self.property_id, from_ts, to_ts, time_interval, time_fct, shared_with)
 
     def read_media(self, dimension_id, ts):
         return self.thing.read_property_media(self.property_id, dimension_id, ts)

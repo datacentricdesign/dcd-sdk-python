@@ -39,7 +39,14 @@ class ThingHTTP:
         """
         return self.connected
 
-    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None, time_interval = None, time_fct = None, fill = None) -> Property:
+    def read_property(self,
+                    property_id: str,
+                    from_ts: int = None,
+                    to_ts: int = None,
+                    time_interval = None,
+                    time_fct = None,
+                    fill = None,
+                    shared_with = None) -> Property:
         """Read the details of a property from Bucket
 
         Args:
@@ -57,20 +64,29 @@ class ThingHTTP:
         Returns:
             Property: The property with its details and values.
         """
-        # Look first in the properties of the Thing
-        prop = self.thing.get_property(property_id)
-        if prop is None:
+        prop = None
+        if shared_with is not None:
             prop = self.thing.get_shared_property(property_id)
+        else:
+            prop = self.thing.get_property(property_id)
+            
         if prop is None:
-            # Still not found, trigger an exception
+            # Not found, trigger an exception
             raise ValueError(
                 f"Property id '{property_id}' not part of Thing '{self.thing.thing_id}' nor shared with this Thing. Did you call read_thing() first?")
 
-
-        uri = f"{self.http_uri}/things/{prop.thing.id}/properties/{property_id}"
+        uri = ""
+        if shared_with is not None:
+            uri += f"{self.http_uri}/properties/{property_id}?shared_with={shared_with}"
+        else:
+            uri += f"{self.http_uri}/things/{prop.thing.id}/properties/{property_id}"
 
         if from_ts is not None and to_ts is not None:
-            uri += "?from=" + str(from_ts) + "&to=" + str(to_ts)
+            if shared_with is not None:
+                uri += "&"
+            else:
+                uri += "?"
+            uri += "from=" + str(from_ts) + "&to=" + str(to_ts)
             if time_interval is not None and time_fct is not None:
                 uri += "&timeInterval=" + time_interval + "&fctInterval=" + time_fct
                 if fill is not None:

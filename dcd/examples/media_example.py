@@ -1,8 +1,6 @@
-# This example shows how to establish a connection 
-# with Bucket using the credentials of a thing.
+# This example shows how to send and receive a
+# media file as part of a property.
 
-# This is a typical case for a Python code running 
-# on a device to collect data. 
 from random import random
 import time
 

@@ -234,7 +234,14 @@ class Thing:
         else:
             self.http.update_property(prop, file_name=file_name)
 
-    def read_property(self, property_id: str, from_ts: int = None, to_ts: int = None, time_interval = None, time_fct = None, fill = None) -> Property:
+    def read_property(self,
+                property_id: str,
+                from_ts: int = None,
+                to_ts: int = None,
+                time_interval = None,
+                time_fct = None,
+                fill = None,
+                shared_with = None) -> Property:
         """Read the details of a property from Bucket
 
         Args:
@@ -259,7 +266,7 @@ class Thing:
         if type(to_ts) is str:
             to_ts = datetime.timestamp(
                 datetime.strptime(to_ts, DATE_FORMAT)) * 1000
-        return self.http.read_property(property_id, from_ts, to_ts, time_interval, time_fct, fill)
+        return self.http.read_property(property_id, from_ts, to_ts, time_interval, time_fct, fill, shared_with)
 
     def read_property_media(self, property_id, dimension_id, ts):
         DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
