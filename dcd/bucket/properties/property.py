@@ -74,7 +74,22 @@ class Property:
     def belongs_to(self, thing):
         self.thing = thing
 
-    def update_values(self, values: dict, time_ms: int = None, file_name: str = None):
+    def update_values(self, values: dict, time_ms: int = None, file_name: str = None, mode: str = 'w'):
+        """Update the values of a property.
+        
+        Args:
+            values: dict
+                List containing values [val-dim1, val-dim2,...]
+            time_ms : int, optional
+                Collection time in milliseconds to add to the values.
+                Default to None
+            file_name: path to a file to upload (e.g. for video, image or audio properties)
+            mode : str, optional
+                Control how to manage existing values.
+                - 'w' overwrite existing (local) values, replace with new values, and send to the server
+                - 'a' append new values after existing values. In this mode, you must call sync() to upload the data on the server. TODO: does not work with files yet.
+                Defaults to 'overwrite'.
+        """
         ts = time_ms
         if ts is None:
             dt = datetime.utcnow()
@@ -85,7 +100,8 @@ class Property:
 
         # TODO: Remove the following line to accumulate local history
         # (it requires more advanced sync management)
-        self.values = []
+        if (mode == 'w'):
+            self.values = []
         self.values.append(values_with_ts)
 
         if self.type_id == "VIDEO" and file_name is None:
@@ -94,8 +110,14 @@ class Property:
         if self.type_id == "IMAGE_PNG" and file_name is None:
             raise ValueError("Missing file name for IMAGE_PNG property update.")
 
-        self.thing.update_property(self, file_name)
+        if (mode == 'w'):
+            self.thing.update_property(self, file_name)
         return ts
+
+    def sync(self):
+        """Upload values to the server and clean up the loacl values"""
+        self.thing.update_property(self)
+        self.values = []
 
     def read(self, from_ts = None, to_ts = None, time_interval = None, time_fct = None, shared_with:str=None):
         """Read the details of a property from Bucket
