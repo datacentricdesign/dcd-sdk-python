@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.30]
+
+- Introduce the overwrite/append mode for Property.update_values() so that a property can accumulate data and only send it once in a while.
+- Added Property.sync() to send data to the server and clear local data
+
 ## [0.1.29]
 
 - Fixed files/value only property update with content-type application/json
